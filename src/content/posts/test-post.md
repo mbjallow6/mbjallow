@@ -3,7 +3,7 @@ title: Test post updated
 description: Test post
 published: 2025-09-27T19:26:00.000+02:00
 author: mb jallow
-coverImage: https://demo.sirv.com/chair.jpg
+coverImage: ""
 tags:
   - blog
 series: Post
