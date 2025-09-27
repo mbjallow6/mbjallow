@@ -1,0 +1,48 @@
+backend:
+  name: github
+  branch: main # or your default branch
+  repo: your-username/your-repo-name # Update when you create repo
+  site_domain: localhost:4321 # For local development
+  base_url: http://localhost:4321
+  auth_endpoint: oauth
+
+media_folder: "public/images/posts"
+public_folder: "/images/posts"
+
+collections:
+  - name: "posts"
+    label: "Blog Posts"
+    folder: "src/content/posts"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { label: "Title", name: "title", widget: "string" }
+      - { label: "Description", name: "description", widget: "text", required: false }
+      - { label: "Published Date", name: "published", widget: "datetime" } # Match existing field name
+      - { label: "Author", name: "author", widget: "string", required: false }
+      - { label: "Cover Image", name: "coverImage", widget: "image", required: false }
+      - { label: "Tags", name: "tags", widget: "list", default: ["blog"] }
+      - { label: "Series", name: "series", widget: "string", required: false }
+      - { label: "Draft", name: "draft", widget: "boolean", default: false }
+      - { label: "Table of Contents", name: "toc", widget: "boolean", default: true }
+      - { label: "Body", name: "body", widget: "markdown" }
+
+  - name: "pages"
+    label: "Pages"
+    files:
+      - label: "About Page"
+        name: "about"
+        file: "src/pages/about.md"
+        fields:
+          - { label: "Title", name: "title", widget: "string" }
+          - { label: "Layout", name: "layout", widget: "hidden", default: "../layouts/MarkdownLayout.astro" }
+          - { label: "Body", name: "body", widget: "markdown" }
+      
+      - label: "Home Content"
+        name: "home"
+        file: "src/content/home.md"
+        fields:
+          - { label: "Title", name: "title", widget: "string", required: false }
+          - { label: "Avatar Image", name: "avatarImage", widget: "image", required: false }
+          - { label: "GitHub Username", name: "githubCalendar", widget: "string", required: false }
+          - { label: "Body", name: "body", widget: "markdown" }

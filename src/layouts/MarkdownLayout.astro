@@ -1,0 +1,81 @@
+---
+import Layout from '~/layouts/Layout.astro'
+import { Image } from 'astro:assets'
+import type { MarkdownLayoutProps } from 'astro'
+
+type Props = MarkdownLayoutProps<{
+  // Define frontmatter props here
+  title: string
+  description?: string
+  published?: Date  // Use 'published' instead of 'publishDate'
+  author?: string
+  coverImage?: string | { src: any; alt: string }
+  tags?: string[]
+}>
+
+// Now, `frontmatter`, `url`, and other Markdown layout properties
+// are accessible with type safety
+const { frontmatter } = Astro.props
+const { title, description, published, author, coverImage, tags } = frontmatter
+---
+
+<Layout title={title} description={description}>
+  <div class="max-w-full py-7.5">
+    <!-- Cover Image (if provided) -->
+    {coverImage && (
+      <div class="mb-6">
+        {typeof coverImage === 'string' ? (
+          <img 
+            src={coverImage} 
+            alt={title} 
+            class="w-full h-64 object-cover rounded-lg"
+            loading="lazy"
+          />
+        ) : (
+          <Image 
+            src={coverImage.src} 
+            alt={coverImage.alt || title} 
+            class="w-full h-64 object-cover rounded-lg"
+            width={800}
+            height={400}
+          />
+        )}
+      </div>
+    )}
+
+    <h1 class="md:mx-2 mb-3 text-[1.75rem] text-heading1 font-semibold">
+      # {title}
+    </h1>
+
+    <!-- Post metadata -->
+    {(published || author || (tags && tags.length > 0)) && (
+      <div class="md:mx-2 mb-5 flex flex-wrap gap-2 text-sm text-foreground opacity-70">
+        {published && (
+          <time datetime={published.toISOString()}>
+            {published.toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })}
+          </time>
+        )}
+        {author && published && <span>•</span>}
+        {author && <span>By {author}</span>}
+        {tags && tags.length > 0 && (published || author) && <span>•</span>}
+        {tags && tags.length > 0 && (
+          <div class="flex gap-2">
+            {tags.map(tag => (
+              <span class="bg-secondary text-secondary-foreground px-2 py-1 rounded text-xs">
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    )}
+
+    <div class="mb-5 prose">
+      <slot />
+    </div>
+  </div>
+</Layout>
