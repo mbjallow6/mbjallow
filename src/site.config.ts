@@ -29,12 +29,12 @@ const config: SiteConfig = {
   trailingSlashes: false,
 
   // CMS Configuration
-  cms: {
-    enabled: true,
-    adminPath: '/admin',
-    mediaFolder: 'public/images/posts',
-    publicFolder: '/images/posts',
-  },
+  // cms: {
+  //   enabled: true,
+  //   adminPath: '/admin',
+  //   mediaFolder: 'public/images/posts',
+  //   publicFolder: '/images/posts',
+  // },
   
   // The navigation links to display in the header.
   navLinks: [
@@ -162,10 +162,10 @@ const config: SiteConfig = {
   // Social links to display in the footer.
   socialLinks: {
     github: 'https://github.com/mbjallow6/mbjallow',
-    mastodon: 'https://github.com/mbjallow6/mbjallow',
+    // mastodon: 'https://github.com/mbjallow6/mbjallow',
     email: 'luka@mbjallow.com',
     linkedin: 'https://www.linkedin.com/in/mbjallow6/',
-    bluesky: 'https://github.com/mbjallow6/mbjallow',
+    // bluesky: 'https://github.com/mbjallow6/mbjallow',
     twitter: 'https://github.com/mbjallow6/mbjallow',
     rss: true, // Set to true to include an RSS feed link in the footer
   },

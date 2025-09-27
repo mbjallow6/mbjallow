@@ -24,14 +24,13 @@ import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
 import remarkGemoji from './src/plugins/remark-gemoji'
 import rehypePixelated from './src/plugins/rehype-pixelated'
-import decapCmsOauth from 'astro-decap-cms-oauth'
+// import decapCmsOauth from 'astro-decap-cms-oauth'
 
 // https://astro.build/config
 export default defineConfig({
   site: siteConfig.site,
   trailingSlash: siteConfig.trailingSlashes ? 'always' : 'never',
   prefetch: true,
-  // output: 'hybrid', // Enable hybrid mode for OAuth routes
   markdown: {
     remarkPlugins: [
       [remarkDescription, { maxChars: 200 }],
@@ -78,12 +77,7 @@ export default defineConfig({
       plugins: [pluginLineNumbers()],
     }),
     mdx(),
-    // Decap CMS OAuth integration
-    decapCmsOauth({
-      decapCMSVersion: "3.3.3",
-      adminDisabled: false,
-      oauthDisabled: false,
-    }),
+    
   ],
   experimental: {
     contentIntellisense: true,

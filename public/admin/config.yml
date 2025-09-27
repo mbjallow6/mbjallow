@@ -1,10 +1,6 @@
 backend:
-  name: github
+  name: git-gateway
   branch: main
-  repo: mbjallow6/mbjallow
-  site_domain: localhost:4321 # Update for production
-  base_url: http://localhost:4321 # Update for production
-  auth_endpoint: oauth
 
 media_folder: "public/images/posts"
 public_folder: "/images/posts"
