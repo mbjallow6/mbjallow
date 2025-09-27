@@ -1,11 +1,10 @@
 ---
-// file: src/layouts/MarkdownLayout.astro
----
 import Layout from '~/layouts/Layout.astro'
 import { Image } from 'astro:assets'
 import type { MarkdownLayoutProps } from 'astro'
 
-type Props = MarkdownLayoutProps<{
+// Fixed TypeScript syntax - proper interface definition
+interface FrontmatterProps {
   title: string
   description?: string
   published?: Date
@@ -13,7 +12,9 @@ type Props = MarkdownLayoutProps<{
   coverImage?: string | { src: any; alt: string }
   coverImageAlt?: string
   tags?: string[]
-}>
+}
+
+type Props = MarkdownLayoutProps<FrontmatterProps>
 
 const { frontmatter } = Astro.props
 const { title, description, published, author, coverImage, coverImageAlt, tags } = frontmatter
@@ -39,7 +40,7 @@ const getImageAlt = (): string => {
   }
   
   // Fallback to basic descriptive text
-  return `Cover image for blog post: ${title}`
+  return `Cover image for: ${title}`
 }
 
 // Validate alt text length (WCAG recommendation: under 125 characters)

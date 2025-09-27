@@ -1,6 +1,6 @@
 ---
 title: "Welcome to My Blog"
-avatarImage: "/images/avatar.jpg"
+avatarImage: "../content/avatar.jpg"
 avatarImageAlt: "MBJallow profile photo"
 githubCalendar: "mbjallow6"
 ---

@@ -1,4 +1,3 @@
-# public/admin/config.yml
 backend:
   name: github
   branch: main
@@ -51,7 +50,7 @@ collections:
         file: "src/content/home.md"
         fields:
           - { label: "Page Title", name: "title", widget: "string", required: false, hint: "Optional title for the home page" }
-          - { label: "Avatar Image", name: "avatarImage", widget: "image", required: false, hint: "Your profile photo or avatar" }
+          - { label: "Avatar Image", name: "avatarImage", widget: "string", required: false, hint: "Path to your profile photo or avatar" }
           - { 
               label: "Avatar Alt Text", 
               name: "avatarImageAlt", 
