@@ -1,8 +1,8 @@
 ---
-title: "Welcome to My Blog"
-avatarImage: "../content/avatar.jpg"
-avatarImageAlt: "MBJallow profile photo"
-githubCalendar: "mbjallow6"
+title: Welcome to My Blog
+avatarImage: ""
+avatarImageAlt: MBJallow profile photo
+githubCalendar: mbjallow6
 ---
 
 # Welcome to My Development Blog
