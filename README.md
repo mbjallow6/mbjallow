@@ -35,7 +35,7 @@ Check out the example site [PageSpeed scores](https://pagespeed.web.dev/analysis
 **Clone the Repository**:
 
 ```bash
-git clone --depth 1 https://github.com/stelcodes/multiterm-astro my-new-blog && cd my-new-blog
+git clone --depth 1 https://github.com/mbjallow6/mbjallow my-new-blog && cd my-new-blog
 ```
 
 **Install Dependencies**:
@@ -78,4 +78,4 @@ This project is licensed under the [MIT License](LICENSE.txt).
 Consider [buying me a coffee](https://ko-fi.com/stelclementine) to keep me caffeinated while I work on open source projects like this one!
 
 
-[![Star History Chart](https://api.star-history.com/svg?repos=stelcodes/multiterm-astro&type=Date)](https://www.star-history.com/#stelcodes/multiterm-astro&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=mbjallow6/mbjallow&type=Date)](https://www.star-history.com/#mbjallow6/mbjallow&Date)

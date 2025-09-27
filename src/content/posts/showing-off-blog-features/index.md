@@ -179,10 +179,10 @@ Over here, to the right!
 GitHub overview cards heavily inspired by [Astro Cactus](https://github.com/chrismwilliams/astro-theme-cactus).
 
 ```md title="GitHub repo card example in markdown"
-::github{repo="stelcodes/multiterm-astro"}
+::github{repo="mbjallow6/mbjallow"}
 ```
 
-::github{repo="stelcodes/multiterm-astro"}
+::github{repo="mbjallow6/mbjallow"}
 
 ```md wrap=true title="GitHub user card example in markdown"
 ::github{user="withastro"}
