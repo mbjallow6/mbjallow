@@ -1,0 +1,58 @@
+---
+import { Image } from 'astro:assets'
+
+interface Props {
+  src: string | ImageMetadata
+  alt: string
+  title?: string
+  class?: string
+  width?: number
+  height?: number
+  loading?: 'lazy' | 'eager'
+  decoding?: 'async' | 'sync' | 'auto'
+}
+
+const { 
+  src, 
+  alt, 
+  title,
+  class: className, 
+  width = 800, 
+  height = 400,
+  loading = 'lazy',
+  decoding = 'async',
+  ...rest 
+} = Astro.props
+
+// Ensure alt text is appropriate length (WCAG recommendation)
+const optimizedAlt = alt.length > 125 ? alt.substring(0, 122) + '...' : alt
+
+// Determine if this is a CMS image (string) or local asset
+const isCMSImage = typeof src === 'string'
+---
+
+{isCMSImage ? (
+  <img 
+    src={src} 
+    alt={optimizedAlt} 
+    title={title}
+    class={className}
+    width={width}
+    height={height}
+    loading={loading}
+    decoding={decoding}
+    {...rest}
+  />
+) : (
+  <Image 
+    src={src} 
+    alt={optimizedAlt} 
+    title={title}
+    class={className}
+    width={width}
+    height={height}
+    loading={loading}
+    decoding={decoding}
+    {...rest}
+  />
+)}

@@ -1,10 +1,10 @@
 # public/admin/config.yml
 backend:
   name: github
-  branch: main # or your default branch
-  repo: mbjallow6/mbjallow # Update when you create repo
-  site_domain: localhost:4321 # For local development
-  base_url: http://localhost:4321
+  branch: main
+  repo: mbjallow6/mbjallow
+  site_domain: localhost:4321 # Update for production
+  base_url: http://localhost:4321 # Update for production
   auth_endpoint: oauth
 
 media_folder: "public/images/posts"
@@ -17,33 +17,55 @@ collections:
     create: true
     slug: "{{slug}}"
     fields:
-      - { label: "Title", name: "title", widget: "string" }
-      - { label: "Description", name: "description", widget: "text", required: false }
-      - { label: "Published Date", name: "published", widget: "datetime" } # Match existing field name
-      - { label: "Author", name: "author", widget: "string", required: false }
-      - { label: "Cover Image", name: "coverImage", widget: "image", required: false }
-      - { label: "Tags", name: "tags", widget: "list", default: ["blog"] }
-      - { label: "Series", name: "series", widget: "string", required: false }
-      - { label: "Draft", name: "draft", widget: "boolean", default: false }
-      - { label: "Table of Contents", name: "toc", widget: "boolean", default: true }
-      - { label: "Body", name: "body", widget: "markdown" }
+      - { label: "Title", name: "title", widget: "string", required: true }
+      - { label: "Description", name: "description", widget: "text", required: false, hint: "Brief description for SEO and social sharing" }
+      - { label: "Published Date", name: "published", widget: "datetime", required: true }
+      - { label: "Author", name: "author", widget: "string", required: false, default: "MBJallow" }
+      - { label: "Cover Image", name: "coverImage", widget: "image", required: false, hint: "Choose a compelling cover image for your post" }
+      - { 
+          label: "Cover Image Alt Text", 
+          name: "coverImageAlt", 
+          widget: "string", 
+          required: false, 
+          hint: "Describe the cover image for accessibility (recommended: under 125 characters). This helps screen reader users understand the image content."
+        }
+      - { label: "Tags", name: "tags", widget: "list", default: ["blog"], hint: "Add relevant tags to help categorize your content" }
+      - { label: "Series", name: "series", widget: "string", required: false, hint: "If this post is part of a series, specify the series name" }
+      - { label: "Draft", name: "draft", widget: "boolean", default: false, hint: "Mark as draft to prevent publishing" }
+      - { label: "Show Table of Contents", name: "toc", widget: "boolean", default: true, hint: "Display an automatic table of contents for this post" }
+      - { label: "Content", name: "body", widget: "markdown", hint: "Write your blog post content here using Markdown" }
 
   - name: "pages"
-    label: "Pages"
+    label: "Site Pages"
     files:
       - label: "About Page"
         name: "about"
         file: "src/pages/about.md"
         fields:
-          - { label: "Title", name: "title", widget: "string" }
+          - { label: "Title", name: "title", widget: "string", required: true }
           - { label: "Layout", name: "layout", widget: "hidden", default: "../layouts/MarkdownLayout.astro" }
-          - { label: "Body", name: "body", widget: "markdown" }
+          - { label: "Content", name: "body", widget: "markdown" }
       
-      - label: "Home Content"
+      - label: "Home Page Content"
         name: "home"
         file: "src/content/home.md"
         fields:
-          - { label: "Title", name: "title", widget: "string", required: false }
-          - { label: "Avatar Image", name: "avatarImage", widget: "image", required: false }
-          - { label: "GitHub Username", name: "githubCalendar", widget: "string", required: false }
-          - { label: "Body", name: "body", widget: "markdown" }
+          - { label: "Page Title", name: "title", widget: "string", required: false, hint: "Optional title for the home page" }
+          - { label: "Avatar Image", name: "avatarImage", widget: "image", required: false, hint: "Your profile photo or avatar" }
+          - { 
+              label: "Avatar Alt Text", 
+              name: "avatarImageAlt", 
+              widget: "string", 
+              required: false, 
+              default: "Site author profile photo",
+              hint: "Describe your avatar for accessibility" 
+            }
+          - { 
+              label: "GitHub Username", 
+              name: "githubCalendar", 
+              widget: "string", 
+              required: false, 
+              default: "mbjallow6",
+              hint: "Your GitHub username to display activity calendar" 
+            }
+          - { label: "Home Content", name: "body", widget: "markdown", hint: "Content to display on your home page" }
