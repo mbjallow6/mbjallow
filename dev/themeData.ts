@@ -1,3 +1,4 @@
+// file: dev/themeData.ts
 import { loadShikiTheme, type BundledShikiTheme } from 'astro-expressive-code'
 import { bundledThemes } from 'shiki'
 import { flattenThemeColors } from '~/utils'

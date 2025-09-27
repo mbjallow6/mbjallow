@@ -1,3 +1,4 @@
+# public/admin/config.yml
 backend:
   name: github
   branch: main # or your default branch
