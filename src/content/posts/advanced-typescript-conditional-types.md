@@ -1,18 +1,21 @@
 ---
-title: 'Advanced TypeScript: Conditional Types'
+title: "Advanced TypeScript: Conditional Types"
+description: Dive into conditional types in TypeScript and how they can enhance type safety.
 published: 2025-07-10
+tags:
+  - typescript
+  - 演示
+  - theory
 draft: false
-description: 'Dive into conditional types in TypeScript and how they can enhance type safety.'
-tags: ['typescript', '演示', 'theory']
+toc: true
 ---
-
 ```shell
 echo "Exploring advanced TypeScript features like conditional types"
 ```
 
 ## 3 Test
 
-## #test
+## \#test
 
 Conditional types in TypeScript allow you to create types based on conditions. Here's an example:
 
