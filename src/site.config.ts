@@ -178,8 +178,8 @@ const config: SiteConfig = {
   giscus: {
     repo: 'mbjallow6/mbjallow',
     repoId: 'R_kgDOP4AHag',
-    category: 'Announcements',
-    categoryId: 'DIC_kwDOP4AHas4Cv-YW',
+    category: 'General',
+    categoryId: 'DIC_kwDOP4AHas4Cv-YX',
     reactionsEnabled: true, // Enable reactions on post itself
   },
   // These are characters available for the character chat feature.
