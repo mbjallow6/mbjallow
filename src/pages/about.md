@@ -3,8 +3,6 @@ title: "About Me"
 layout: "../layouts/MarkdownLayout.astro"
 ---
 
-# About Me
-
 I'm MBJallow, a passionate developer who loves building modern web applications with cutting-edge technologies.
 
 ## My Journey
