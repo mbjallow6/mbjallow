@@ -3,7 +3,6 @@ import Layout from '~/layouts/Layout.astro'
 import { Image } from 'astro:assets'
 import type { MarkdownLayoutProps } from 'astro'
 
-// Fixed TypeScript syntax - proper interface definition
 interface FrontmatterProps {
   title: string
   description?: string
@@ -20,38 +19,35 @@ const { frontmatter } = Astro.props
 const { title, description, published, author, coverImage, coverImageAlt, tags } = frontmatter
 
 /**
- * Get appropriate alt text following WCAG accessibility guidelines
- * Priority: Explicit alt → coverImageAlt → contextual description
+ * Get appropriate alt text with better fallbacks
  */
 const getImageAlt = (): string => {
-  // If coverImage is an object with alt text, use it
   if (typeof coverImage === 'object' && coverImage?.alt) {
     return coverImage.alt
   }
-  
-  // If explicit coverImageAlt is provided, use it
   if (coverImageAlt) {
     return coverImageAlt
   }
-  
-  // Create contextual alt text based on post content
   if (description) {
     return `Cover image for: ${title} - ${description.substring(0, 80)}${description.length > 80 ? '...' : ''}`
   }
-  
-  // Fallback to basic descriptive text
   return `Cover image for: ${title}`
 }
 
-// Validate alt text length (WCAG recommendation: under 125 characters)
+// Check if the coverImage is a valid URL or imported image
+const isValidImage = coverImage && (
+  (typeof coverImage === 'string' && (coverImage.startsWith('http') || coverImage.startsWith('/'))) ||
+  (typeof coverImage === 'object' && coverImage.src)
+)
+
 const altText = getImageAlt()
 const optimizedAltText = altText.length > 125 ? altText.substring(0, 122) + '...' : altText
 ---
 
 <Layout title={title} description={description}>
   <article class="max-w-full py-7.5" role="main">
-    <!-- Cover Image with WCAG-compliant alt text -->
-    {coverImage && (
+    <!-- Only render image if it's valid -->
+    {isValidImage && (
       <figure class="mb-6" role="img" aria-describedby="cover-image-caption">
         {typeof coverImage === 'string' ? (
           <img 
@@ -72,20 +68,17 @@ const optimizedAltText = altText.length > 125 ? altText.substring(0, 122) + '...
             decoding="async"
           />
         )}
-        <!-- Hidden caption for screen readers -->
         <figcaption id="cover-image-caption" class="sr-only">
           {optimizedAltText}
         </figcaption>
       </figure>
     )}
 
-    <!-- Article Header -->
     <header class="mb-6">
       <h1 class="md:mx-2 mb-3 text-[1.75rem] text-heading1 font-semibold">
         # {title}
       </h1>
 
-      <!-- Post metadata with semantic markup -->
       {(published || author || (tags && tags.length > 0)) && (
         <div class="md:mx-2 mb-5 flex flex-wrap gap-2 text-sm text-foreground opacity-70" role="contentinfo">
           {published && (
@@ -122,14 +115,12 @@ const optimizedAltText = altText.length > 125 ? altText.substring(0, 122) + '...
       )}
     </header>
 
-    <!-- Article Content -->
     <div class="mb-5 prose prose-lg max-w-none" role="document">
       <slot />
     </div>
   </article>
 </Layout>
 
-<!-- Accessibility utility styles -->
 <style>
   .sr-only {
     position: absolute;

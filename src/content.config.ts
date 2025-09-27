@@ -15,9 +15,9 @@ const postsCollection = defineCollection({
       tags: z.array(z.string()).optional().default([]),
       // Enhanced coverImage schema supporting both formats with proper alt text
       coverImage: z.union([
-        z.string(), // Simple string URL for CMS uploads
-        z.object({ // Object with src and alt for better accessibility
-          src: z.union([z.string(), image()]),
+        z.string().url(), // Only allow full URLs for strings
+        z.object({
+          src: image(), // Use image() helper for local images
           alt: z.string(),
         })
       ]).optional(),
@@ -33,7 +33,7 @@ const homeCollection = defineCollection({
     z.object({
       title: z.string().optional(),
       avatarImage: z.union([
-        z.string(),
+        z.string().url(), // Only URLs for strings
         z.object({
           src: image(),
           alt: z.string().default('Site author avatar'),
