@@ -366,30 +366,32 @@ if (import.meta.env.DEV) {
   </figure>
 ) : (
   <!-- Handle completely invalid sources -->
-  {import.meta.env.DEV ? (
-    <div class="dev-image-error border-2 border-red-300 bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
-      <div class="flex items-center gap-2">
-        <svg class="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z"></path>
-        </svg>
-        <div>
-          <p class="text-red-700 dark:text-red-300 text-sm font-medium">
-            AccessibleImage: Invalid image source
-          </p>
-          <p class="text-red-600 dark:text-red-400 text-xs mt-1">
-            Reason: {imageValidation.reason}
-          </p>
-          <p class="text-red-600 dark:text-red-400 text-xs font-mono break-all">
-            Source: {JSON.stringify(src)}
-          </p>
+  <Fragment>
+    {import.meta.env.DEV ? (
+      <div class="dev-image-error border-2 border-red-300 bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
+        <div class="flex items-center gap-2">
+          <svg class="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z"></path>
+          </svg>
+          <div>
+            <p class="text-red-700 dark:text-red-300 text-sm font-medium">
+              AccessibleImage: Invalid image source
+            </p>
+            <p class="text-red-600 dark:text-red-400 text-xs mt-1">
+              Reason: {imageValidation.reason}
+            </p>
+            <p class="text-red-600 dark:text-red-400 text-xs font-mono break-all">
+              Source: {JSON.stringify(src)}
+            </p>
+          </div>
         </div>
       </div>
-    </div>
-  ) : (
-    <div class="sr-only" role="img" aria-label={guaranteedAltText}>
-      Image source not available: {guaranteedAltText}
-    </div>
-  )}
+    ) : (
+      <div class="sr-only" role="img" aria-label={guaranteedAltText}>
+        Image source not available: {guaranteedAltText}
+      </div>
+    )}
+  </Fragment>
 )}
 
 <style>

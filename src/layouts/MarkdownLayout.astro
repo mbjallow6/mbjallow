@@ -145,22 +145,24 @@ if (import.meta.env.DEV) {
       </div>
     ) : (
       <!-- Development-only debugging placeholder -->
-      import.meta.env.DEV && (
-        <div class="mb-6 p-4 border-2 border-dashed border-yellow-300 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-          <div class="text-center text-yellow-700 dark:text-yellow-300">
-            <svg class="w-6 h-6 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z"></path>
-            </svg>
-            <p class="text-sm font-medium">No cover image for this post</p>
-            <p class="text-xs mt-1">Reason: {imageValidation.reason}</p>
-            {typeof coverImage === 'string' && coverImage.startsWith('./') && (
-              <p class="text-xs mt-2 font-medium">
-                💡 Move to: <code class="bg-yellow-200 dark:bg-yellow-800 px-1 rounded">public/images/{coverImage.replace(/^\.\//, '')}</code>
-              </p>
-            )}
+      <Fragment>
+        {import.meta.env.DEV && (
+          <div class="mb-6 p-4 border-2 border-dashed border-yellow-300 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+            <div class="text-center text-yellow-700 dark:text-yellow-300">
+              <svg class="w-6 h-6 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z"></path>
+              </svg>
+              <p class="text-sm font-medium">No cover image for this post</p>
+              <p class="text-xs mt-1">Reason: {imageValidation.reason}</p>
+              {typeof coverImage === 'string' && coverImage.startsWith('./') && (
+                <p class="text-xs mt-2 font-medium">
+                  💡 Move to: <code class="bg-yellow-200 dark:bg-yellow-800 px-1 rounded">public/images/{coverImage.replace(/^\.\//, '')}</code>
+                </p>
+              )}
+            </div>
           </div>
-        </div>
-      )
+        )}
+      </Fragment>
     )}
 
     <!-- Article Header -->
