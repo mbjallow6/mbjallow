@@ -2,7 +2,30 @@
 import { defineCollection, z } from 'astro:content'
 import { glob } from 'astro/loaders'
 
-const postsCollection = defineCollection({
+/**
+ * Shared schema for validating optional image objects.
+ * Ensures imported images are type-safe and have required alt text.
+ */
+const ImageObjectSchema = ({ image }: { image: any }) =>
+  z
+    .object({
+      src: image(),         // Astro image helper
+      alt: z.string().min(1) // Alt is required for imported images
+    })
+    .strict()
+
+/**
+ * Permissive string schema: allows full URLs or absolute paths.
+ * We validate only that strings start with http(s) or "/" to avoid build failures.
+ */
+const StringImageSchema = z
+  .string()
+  .refine(
+    (v) => /^https?:\/\/|^\//.test(v),
+    { message: 'Must be a valid URL or absolute path (starts with "/" or "http")' }
+  )
+
+export const postsCollection = defineCollection({
   loader: glob({ pattern: ['**/*.md', '**/*.mdx'], base: './src/content/posts' }),
   schema: ({ image }) =>
     z.object({
@@ -13,50 +36,45 @@ const postsCollection = defineCollection({
       draft: z.boolean().optional().default(false),
       series: z.string().optional(),
       tags: z.array(z.string()).optional().default([]),
-      // Enhanced coverImage schema supporting both formats with proper alt text
-      coverImage: z.union([
-        z.string().url(), // Only allow full URLs for strings
-        z.object({
-          src: image(), // Use image() helper for local images
-          alt: z.string(),
-        })
-      ]).optional(),
-      // Dedicated field for alt text when using string coverImage
-      coverImageAlt: z.string().optional(),
+
+      // coverImage: either a validated string (URL or "/…") or an image object
+      coverImage: z.union([StringImageSchema, ImageObjectSchema({ image })]).optional(),
+
+      // coverImageAlt only used for string sources; object images require alt in schema
+      coverImageAlt: z.string().min(1).optional(),
+
       toc: z.boolean().optional().default(true),
     }),
 })
 
-const homeCollection = defineCollection({
+export const homeCollection = defineCollection({
   loader: glob({ pattern: ['home.md', 'home.mdx'], base: './src/content' }),
   schema: ({ image }) =>
     z.object({
       title: z.string().optional(),
+
       avatarImage: z.union([
-        z.string().url(), // Only URLs for strings
-        z.object({
-          src: image(),
-          alt: z.string().default('Site author avatar'),
-        })
+        StringImageSchema,            // Full URL or "/…"
+        ImageObjectSchema({ image })  // Imported image with required alt
       ]).optional(),
-      avatarImageAlt: z.string().optional(),
+
+      avatarImageAlt: z.string().min(1).optional(),
       githubCalendar: z.string().optional(),
     }),
 })
 
-const addendumCollection = defineCollection({
+export const addendumCollection = defineCollection({
   loader: glob({ pattern: ['addendum.md', 'addendum.mdx'], base: './src/content' }),
   schema: ({ image }) =>
     z.object({
       title: z.string().optional(),
+
       avatarImage: z.union([
-        z.string(),
-        z.object({
-          src: image(),
-          alt: z.string().default('Site author avatar'),
-        })
+        StringImageSchema,
+        ImageObjectSchema({ image })
       ]).optional(),
-      avatarImageAlt: z.string().optional(),
+
+      avatarImageAlt: z.string().min(1).optional(),
     }),
 })
 
@@ -65,4 +83,3 @@ export const collections = {
   home: homeCollection,
   addendum: addendumCollection,
 }
-
