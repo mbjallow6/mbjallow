@@ -6,7 +6,7 @@ draft: false
 tags: ['astro', 'demo', 'markdown']
 toc: true
 coverImage:
-  src: './posts/test-post/cover.jpg'
+  src: 'https://images.unsplash.com/photo-1428606381429-22224991fb0c'
   alt: 'A person with short, thick hair and prescription glasses sits at an organized workstation, using a magnification app to navigate a webpage. Their posture is proper and relaxed. On the desk: a computer, a mouse, a large desk lamp and a small notebook.'
 ---
 
