@@ -35,21 +35,21 @@ const {
 } = Astro.props
 
 /**
- * Advanced alt text generation with intelligent fallbacks
- * Follows WCAG 2.1 AA guidelines and semantic best practices
+ * PRODUCTION-READY: Advanced alt text generation with GUARANTEED non-empty result
+ * This function MUST NEVER return an empty string or undefined
  */
 const generateIntelligentAltText = (): string => {
-  // Priority 1: Explicit alt text provided
+  // Priority 1: Explicit alt text provided (validate it's not empty)
   if (alt && alt.trim().length > 0) {
     return alt.trim()
   }
   
-  // Priority 2: Alt text from image object (imported images)
-  if (typeof src === 'object' && 'alt' in src && src.alt) {
-    return src.alt
+  // Priority 2: Alt text from image object (validate it's not empty)
+  if (typeof src === 'object' && 'alt' in src && src.alt && src.alt.trim().length > 0) {
+    return src.alt.trim()
   }
   
-  // Priority 3: Custom fallback provided
+  // Priority 3: Custom fallback provided (validate it's not empty)
   if (fallbackAlt && fallbackAlt.trim().length > 0) {
     return fallbackAlt.trim()
   }
@@ -64,10 +64,10 @@ const generateIntelligentAltText = (): string => {
       imageSrc = typeof src.src === 'string' ? src.src : ''
     }
     
-    if (imageSrc) {
+    if (imageSrc && imageSrc.trim().length > 0) {
       // Extract filename and clean it up
       const filename = imageSrc.split('/').pop()?.split('?')[0]?.split('.')[0]
-      if (filename) {
+      if (filename && filename.trim().length > 0) {
         // Convert kebab-case, snake_case, and camelCase to readable text
         const readableText = filename
           .replace(/[-_]/g, ' ')
@@ -77,15 +77,17 @@ const generateIntelligentAltText = (): string => {
           .toLowerCase()
           .replace(/^\w/, c => c.toUpperCase())
         
-        return readableText ? `Image: ${readableText}` : 'Image'
+        if (readableText && readableText.length > 0) {
+          return `Image: ${readableText}`
+        }
       }
     }
   } catch (error) {
     console.warn('AccessibleImage: Error extracting filename for alt text:', error)
   }
   
-  // Priority 5: Generic but meaningful fallback
-  return 'Image'
+  // Priority 5: GUARANTEED non-empty fallback - this MUST never be empty
+  return 'Descriptive image'
 }
 
 /**
@@ -165,7 +167,7 @@ const analyzeImageSource = () => {
       }
       
       // Relative paths - convert to absolute for security
-      if (trimmedSrc.includes('.') && (trimmedSrc.includes('jpg') || trimmedSrc.includes('png') || trimmedSrc.includes('webp') || trimmedSrc.includes('gif'))) {
+      if (trimmedSrc.includes('.') && /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(trimmedSrc)) {
         const convertedPath = `/images/posts/${trimmedSrc.replace(/^\.\//, '')}`
         console.warn(`AccessibleImage: Converting relative path "${trimmedSrc}" to "${convertedPath}"`)
         return {
@@ -188,8 +190,11 @@ const analyzeImageSource = () => {
 const imageAnalysis = analyzeImageSource()
 const altText = generateIntelligentAltText()
 
+// CRITICAL: Double-check that we NEVER have empty alt text
+const guaranteedAltText = (altText && altText.trim().length > 0) ? altText.trim() : 'Descriptive image'
+
 // Optimize alt text length (WCAG 2.1 recommendation: under 125 characters)
-const optimizedAlt = altText.length > 125 ? altText.substring(0, 122) + '...' : altText
+const optimizedAlt = guaranteedAltText.length > 125 ? guaranteedAltText.substring(0, 122) + '...' : guaranteedAltText
 
 // Determine loading strategy
 const effectiveLoading = priority ? 'eager' : loading
@@ -198,16 +203,23 @@ const effectiveFetchPriority = priority ? 'high' : fetchpriority
 // Security: Sanitize CSS classes
 const sanitizedClassName = className?.replace(/[<>'"]/g, '') || ''
 
+// FINAL SAFETY CHECK: Ensure alt text is never empty
+if (!optimizedAlt || optimizedAlt.trim().length === 0) {
+  console.error('AccessibleImage: CRITICAL ERROR - Alt text is empty, using emergency fallback')
+  // This should never happen, but just in case
+}
+const finalAltText = (optimizedAlt && optimizedAlt.trim().length > 0) ? optimizedAlt : 'Image content'
+
 // Development logging for debugging
 if (import.meta.env.DEV && imageAnalysis.isValid) {
   console.log(`🖼️  AccessibleImage Analysis:`)
   console.log(`   Type: ${imageAnalysis.type}`)
   console.log(`   Use Astro Image: ${imageAnalysis.useAstroImage}`)
-  console.log(`   Alt text: "${optimizedAlt}" (${optimizedAlt.length} chars)`)
+  console.log(`   Final Alt text: "${finalAltText}" (${finalAltText.length} chars)`)
   console.log(`   Loading: ${effectiveLoading} | Priority: ${priority}`)
   
   if (!alt && !fallbackAlt) {
-    console.warn(`⚠️  No explicit alt text provided. Generated: "${optimizedAlt}"`)
+    console.warn(`⚠️  No explicit alt text provided. Generated: "${finalAltText}"`)
   }
 }
 ---
@@ -216,10 +228,10 @@ if (import.meta.env.DEV && imageAnalysis.isValid) {
 {imageAnalysis.isValid ? (
   <figure class="accessible-image-container" role="img">
     {imageAnalysis.useAstroImage ? (
-      <!-- Optimized Astro Image Component -->
+      <!-- Optimized Astro Image Component with GUARANTEED alt text -->
       <Image 
         src={imageAnalysis.imageSrc}
-        alt={optimizedAlt}
+        alt={finalAltText}
         title={title}
         class={sanitizedClassName}
         width={width}
@@ -235,7 +247,7 @@ if (import.meta.env.DEV && imageAnalysis.isValid) {
       <!-- Standard HTML Image with Error Handling -->
       <img 
         src={imageAnalysis.imageSrc}
-        alt={optimizedAlt}
+        alt={finalAltText}
         title={title}
         class={sanitizedClassName}
         width={width}
@@ -256,7 +268,7 @@ if (import.meta.env.DEV && imageAnalysis.isValid) {
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
           </svg>
           <p class="text-sm">Image not available</p>
-          <p class="text-xs opacity-75">{optimizedAlt}</p>
+          <p class="text-xs opacity-75">{finalAltText}</p>
         </div>
       </div>
     </div>
