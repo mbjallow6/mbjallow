@@ -1,6 +1,6 @@
 ---
 import Layout from '~/layouts/Layout.astro'
-import { Image } from 'astro:assets'
+import AccessibleImage from '~/components/AccessibleImage.astro'
 import type { MarkdownLayoutProps } from 'astro'
 
 interface FrontmatterProps {
@@ -19,66 +19,99 @@ const { frontmatter } = Astro.props
 const { title, description, published, author, coverImage, coverImageAlt, tags } = frontmatter
 
 /**
- * Get appropriate alt text with better fallbacks
+ * Generate comprehensive, accessible alt text with intelligent fallbacks
+ * Following WCAG 2.1 guidelines for meaningful image descriptions
+ * This now works as a fallback generator for the AccessibleImage component
  */
-const getImageAlt = (): string => {
-  if (typeof coverImage === 'object' && coverImage?.alt) {
-    return coverImage.alt
+const generateContextualFallback = (): string => {
+  // Create contextual description from available content
+  if (description && title) {
+    const contextualAlt = `Cover image for "${title}" - ${description.substring(0, 60)}${description.length > 60 ? '...' : ''}`
+    return contextualAlt.length <= 125 ? contextualAlt : contextualAlt.substring(0, 122) + '...'
   }
-  if (coverImageAlt) {
-    return coverImageAlt
+  
+  // Basic title-based description
+  if (title) {
+    return `Cover image for blog post: ${title}`
   }
-  if (description) {
-    return `Cover image for: ${title} - ${description.substring(0, 80)}${description.length > 80 ? '...' : ''}`
-  }
-  return `Cover image for: ${title}`
+  
+  // Generic but meaningful fallback
+  return "Blog post cover image"
 }
 
-// Check if the coverImage is a valid URL or imported image
-const isValidImage = coverImage && (
-  (typeof coverImage === 'string' && (coverImage.startsWith('http') || coverImage.startsWith('/'))) ||
-  (typeof coverImage === 'object' && coverImage.src)
-)
+/**
+ * Determine if we should display the cover image
+ * This validates the image source before passing to AccessibleImage
+ */
+const shouldDisplayCoverImage = (): boolean => {
+  if (!coverImage) return false
+  
+  // Handle object-type cover images (imported images)
+  if (typeof coverImage === 'object' && coverImage.src) {
+    return true
+  }
+  
+  // Handle string-type cover images (URLs and paths)
+  if (typeof coverImage === 'string') {
+    const trimmedSrc = coverImage.trim()
+    return trimmedSrc.length > 0 && (
+      trimmedSrc.startsWith('http://') || 
+      trimmedSrc.startsWith('https://') ||
+      trimmedSrc.startsWith('/') ||
+      trimmedSrc.includes('.')
+    )
+  }
+  
+  return false
+}
 
-const altText = getImageAlt()
-const optimizedAltText = altText.length > 125 ? altText.substring(0, 122) + '...' : altText
+// Generate contextual fallback for AccessibleImage component
+const contextualFallback = generateContextualFallback()
+const showCoverImage = shouldDisplayCoverImage()
+
+// Log image handling information in development (enhanced logging)
+if (import.meta.env.DEV && showCoverImage) {
+  console.log(`🖼️  MarkdownLayout image info for "${title}":`)
+  console.log(`   Cover Image Type: ${typeof coverImage}`)
+  console.log(`   Cover Image Source: ${typeof coverImage === 'string' ? coverImage : '[Object]'}`)
+  console.log(`   Explicit Alt Text: ${coverImageAlt ? `"${coverImageAlt}"` : 'Not provided'}`)
+  console.log(`   Generated Fallback: "${contextualFallback}"`)
+  console.log(`   Will use AccessibleImage component for rendering`)
+  
+  if (!coverImageAlt && typeof coverImage !== 'object') {
+    console.warn(`⚠️  No explicit alt text provided. AccessibleImage will handle fallback generation.`)
+  }
+}
 ---
 
 <Layout title={title} description={description}>
   <article class="max-w-full py-7.5" role="main">
-    <!-- Only render image if it's valid -->
-    {isValidImage && (
-      <figure class="mb-6" role="img" aria-describedby="cover-image-caption">
-        {typeof coverImage === 'string' ? (
-          <img 
-            src={coverImage} 
-            alt={optimizedAltText}
-            class="w-full h-64 object-cover rounded-lg"
-            loading="lazy"
-            decoding="async"
-          />
-        ) : (
-          <Image 
-            src={coverImage.src} 
-            alt={optimizedAltText}
-            class="w-full h-64 object-cover rounded-lg"
-            width={800}
-            height={400}
-            loading="lazy"
-            decoding="async"
-          />
-        )}
-        <figcaption id="cover-image-caption" class="sr-only">
-          {optimizedAltText}
-        </figcaption>
-      </figure>
+    <!-- Cover Image using AccessibleImage component -->
+    {showCoverImage && (
+      <div class="mb-6">
+        <AccessibleImage 
+          src={coverImage}
+          alt={coverImageAlt}
+          fallbackAlt={contextualFallback}
+          class="w-full h-64 object-cover rounded-lg"
+          width={800}
+          height={400}
+          priority={true}
+          loading="eager"
+          quality={80}
+          format="webp"
+          title={title}
+        />
+      </div>
     )}
 
+    <!-- Article Header -->
     <header class="mb-6">
       <h1 class="md:mx-2 mb-3 text-[1.75rem] text-heading1 font-semibold">
         # {title}
       </h1>
 
+      <!-- Post metadata with semantic markup -->
       {(published || author || (tags && tags.length > 0)) && (
         <div class="md:mx-2 mb-5 flex flex-wrap gap-2 text-sm text-foreground opacity-70" role="contentinfo">
           {published && (
@@ -115,12 +148,14 @@ const optimizedAltText = altText.length > 125 ? altText.substring(0, 122) + '...
       )}
     </header>
 
+    <!-- Article Content -->
     <div class="mb-5 prose prose-lg max-w-none" role="document">
       <slot />
     </div>
   </article>
 </Layout>
 
+<!-- Accessibility and utility styles -->
 <style>
   .sr-only {
     position: absolute;
