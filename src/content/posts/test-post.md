@@ -3,7 +3,7 @@ title: Test Post
 description: Test Post
 published: 2025-09-28T21:38:00.000+02:00
 author: MBJallow
-coverImage: https://images.unsplash.com/photo-1428606381429-22224991fb0c
+coverImage: /images/posts/cover.jpg
 coverImageAlt: Test Alt
 tags:
   - blog Typescript
