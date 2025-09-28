@@ -5,9 +5,8 @@ description: A comprehensive guide to building performant, type-safe web
   system.
 published: 2025-09-28T18:42:00.000+02:00
 author: MB Jallow
-coverImage: /images/posts/cover.jpg
-coverImageAlt: '"Modern laptop showing Astro and TypeScript logos with code in
-  the background" '
+coverImage: ""
+coverImageAlt: ""
 tags:
   - blog typescript
 series: Modern Web Development
