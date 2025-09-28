@@ -79,18 +79,18 @@ _Italic text_
 
 Images can include a title string after the URL to render as a `<figure>` with a `<figcaption>`.
 
-![Pixel art of a tree](./public/images/duck.webp 'Pixel art renders poorly without proper CSS')
+![Pixel art of a tree](./duck.webp 'Pixel art renders poorly without proper CSS')
 
 ```md title="Pixel art markdown" wrap
-![Pixel art of a tree](./public/images/duck.webp 'Pixel art renders poorly without proper CSS')
+![Pixel art of a tree](./duck.webp 'Pixel art renders poorly without proper CSS')
 ```
 
 I've also added a special tag for pixel art that adds the correct CSS to render properly. Just add `#pixelated` to the very end of the alt string.
 
-![Pixel art of a tree #pixelated](./public/images/duck.webp 'But adding #pixelated to the end of the alt string fixes this')
+![Pixel art of a tree #pixelated](./duck.webp 'But adding #pixelated to the end of the alt string fixes this')
 
 ```md title="Pixel art markdown with #pixelated" wrap
-![Pixel art of a tree #pixelated](./public/images/duck.webp 'But adding #pixelated to the end of the alt string fixes this')
+![Pixel art of a tree #pixelated](./duck.webp 'But adding #pixelated to the end of the alt string fixes this')
 ```
 
 ## Admonitions
