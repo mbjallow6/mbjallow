@@ -6,7 +6,7 @@ description: A comprehensive guide to building performant, type-safe web
 published: 2025-09-28T03:00:00.000+02:00
 author: MB Jallow
 coverImage: https://images.unsplash.com/photo-1428606381429-22224991fb0c
-coverImageAlt: Modern laptop showing Astro and TypeScript logos with code in the background
+coverImageAlt: "Modern laptop showing Astro and TypeScript logos with code in the background "
 tags:
   - blog astro typescript
 series: Modern Web Development
