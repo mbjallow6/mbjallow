@@ -1,6 +1,6 @@
 ---
 // file: src/content/posts/showing-off-blog-features/index.md
-title: 'Showing Off Blog Features'
+title: 'Test Post: Showing Off Blog Features'
 published: 2025-07-20
 draft: false
 tags: ['astro', 'demo', 'markdown']
