@@ -120,15 +120,22 @@ const validateAndProcessImageSource = () => {
 
 /**
  * ROBUST: String source validation with comprehensive path handling
+ * INCLUDING CRITICAL FIX for 'public/' prefix
  */
 const validateStringSource = (stringSrc: string) => {
-  const trimmed = stringSrc.trim()
+  let trimmed = stringSrc.trim()
   
   if (!trimmed || trimmed.length === 0) {
     return { isValid: false, processedSrc: null, reason: 'empty-string' }
   }
 
   try {
+    // CRITICAL FIX: Remove 'public/' prefix if it exists (common mistake)
+    if (trimmed.startsWith('public/')) {
+      trimmed = '/' + trimmed.substring(7) // Remove 'public/' and add leading slash
+      console.warn(`AccessibleImage: Fixed incorrect path - removed 'public/' prefix: "${stringSrc}" -> "${trimmed}"`)
+    }
+
     // External HTTPS URLs - Safe and valid
     if (trimmed.startsWith('https://')) {
       return { 
@@ -295,7 +302,7 @@ const sanitizedClassName = className ?
 // Development debugging
 if (import.meta.env.DEV) {
   console.log(`🖼️ AccessibleImage Debug:`)
-  console.log(`   Source:`, src)
+  console.log(`   Original Source:`, src)
   console.log(`   Validation:`, imageValidation)
   console.log(`   Final Alt: "${guaranteedAltText}" (${guaranteedAltText.length} chars)`)
   console.log(`   Rendering Method: ${imageValidation.useAstroImage ? 'Astro Image' : 'Regular img tag'}`)
