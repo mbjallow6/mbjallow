@@ -1,7 +1,8 @@
 ---
+# file: src/content/home.md
 title: Welcome to My Blog
 avatarImage: 
-  src: '/images/avatar.jpeg'
+  src: './avatar.jpeg'
   alt: 'Profile photo'
 avatarImageAlt: MBJallow profile photo
 githubCalendar: mbjallow6

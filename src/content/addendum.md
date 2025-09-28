@@ -1,6 +1,7 @@
 ---
+# file: src/content/addendum.md
 avatarImage:
-  src: '/images/avatar.jpeg'
+  src: './avatar.jpeg'
   alt: 'My avatar'
 ---
 
