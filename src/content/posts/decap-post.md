@@ -7,7 +7,7 @@ tags:
   - blog
 series: Decap CMS
 draft: false
-toc: true
+toc: false
 ---
 Since the post does not have a description in the frontmatter, the first paragraph is used.
 
