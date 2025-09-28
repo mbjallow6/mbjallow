@@ -17,6 +17,7 @@ interface Props {
   format?: 'avif' | 'webp' | 'jpeg' | 'png'
   priority?: boolean
   fetchpriority?: 'high' | 'low' | 'auto'
+  inferSize?: boolean
 }
 
 const { 
@@ -33,228 +34,188 @@ const {
   format = 'webp',
   priority = false,
   fetchpriority = 'auto',
+  inferSize = true, // DEFAULT: Enable automatic dimension inference
   ...rest 
 } = Astro.props
 
 /**
- * BULLETPROOF: Image source validation that NEVER allows problematic paths
- * to reach Astro Image component
+ * BULLETPROOF: String processing for all path types
  */
-const validateAndProcessImageSource = () => {
+const processStringSource = (stringSrc: string) => {
+  let processed = stringSrc.trim()
+  
+  if (!processed || processed.length === 0) {
+    return { isValid: false, finalSrc: null, reason: 'empty-string' }
+  }
+
+  try {
+    // CRITICAL: Remove 'public/' prefix (common mistake)
+    if (processed.startsWith('public/')) {
+      processed = '/' + processed.substring(7)
+      console.warn(`AccessibleImage: Fixed path - removed 'public/' prefix: "${stringSrc}" -> "${processed}"`)
+    }
+
+    // External HTTPS URLs
+    if (processed.startsWith('https://')) {
+      return { isValid: true, finalSrc: processed, reason: 'https-url' }
+    }
+    
+    // External HTTP URLs (with warning)
+    if (processed.startsWith('http://')) {
+      console.warn(`AccessibleImage: Insecure HTTP URL: ${processed}`)
+      return { isValid: true, finalSrc: processed, reason: 'http-url' }
+    }
+    
+    // Public folder paths - PERFECT for Astro Image with inferSize
+    if (processed.startsWith('/')) {
+      return { isValid: true, finalSrc: processed, reason: 'public-path' }
+    }
+    
+    // Data URLs
+    if (processed.startsWith('data:image/')) {
+      return { isValid: true, finalSrc: processed, reason: 'data-url' }
+    }
+    
+    // Relative paths - convert to absolute
+    if (processed.startsWith('./') || processed.startsWith('../')) {
+      let converted = processed.replace(/^\.\.?\//, '')
+      if (/\.(jpg|jpeg|png|webp|gif|svg|avif)$/i.test(converted)) {
+        converted = `/images/${converted}`
+        console.warn(`AccessibleImage: Converting relative path "${processed}" to "${converted}"`)
+        return { isValid: true, finalSrc: converted, reason: 'converted-relative' }
+      }
+    }
+    
+    // Plain filename - assume public/images
+    if (processed.includes('.') && /\.(jpg|jpeg|png|webp|gif|svg|avif)$/i.test(processed) && !processed.includes('/')) {
+      const assumed = `/images/${processed}`
+      console.warn(`AccessibleImage: Assuming "${processed}" is at "${assumed}"`)
+      return { isValid: true, finalSrc: assumed, reason: 'assumed-location' }
+    }
+    
+    // Invalid format
+    return { isValid: false, finalSrc: null, reason: 'invalid-format' }
+    
+  } catch (error) {
+    console.error('AccessibleImage: String processing error:', error)
+    return { isValid: false, finalSrc: null, reason: 'processing-error' }
+  }
+}
+
+/**
+ * OPTIMAL: Image source validation that enables Astro Image for ALL valid sources
+ */
+const validateImageSource = () => {
   // Early exit for invalid sources
   if (!src || src === '' || src === null || src === undefined) {
     return { 
       isValid: false, 
-      useAstroImage: false, 
       finalSrc: null, 
-      reason: 'no-source' 
+      reason: 'no-source',
+      useInferSize: false
     }
   }
 
   try {
-    // Case 1: Direct ImageMetadata object (imported images)
+    // Case 1: ImageMetadata object (imported images) - No inferSize needed
     if (typeof src === 'object' && src !== null && 'src' in src && 'width' in src && 'height' in src) {
       return {
         isValid: true,
-        useAstroImage: true,
         finalSrc: src,
-        reason: 'imported-image-metadata'
+        reason: 'imported-image-metadata',
+        useInferSize: false // Already has dimensions
       }
     }
 
-    // Case 2: Object with src property
+    // Case 2: Object with nested ImageMetadata
     if (typeof src === 'object' && src !== null && 'src' in src) {
-      const nestedSrc = src.src
-      
-      // Check if nested src is ImageMetadata
-      if (typeof nestedSrc === 'object' && nestedSrc !== null && 'width' in nestedSrc && 'height' in nestedSrc) {
+      if (typeof src.src === 'object' && src.src !== null && 'width' in src.src && 'height' in src.src) {
         return {
           isValid: true,
-          useAstroImage: true,
-          finalSrc: nestedSrc,
-          reason: 'nested-image-metadata'
+          finalSrc: src.src,
+          reason: 'nested-image-metadata',
+          useInferSize: false // Already has dimensions
         }
       }
       
-      // If nested src is string, validate and use regular img
-      if (typeof nestedSrc === 'string') {
-        const validatedString = validateStringSource(nestedSrc)
+      // If src is a string within object, process it
+      if (typeof src.src === 'string') {
+        const processedSrc = processStringSource(src.src)
         return {
-          isValid: validatedString.isValid,
-          useAstroImage: false, // NEVER use Astro Image for string sources
-          finalSrc: validatedString.processedSrc,
-          reason: `object-with-${validatedString.reason}`
+          isValid: processedSrc.isValid,
+          finalSrc: processedSrc.finalSrc,
+          reason: `object-string-${processedSrc.reason}`,
+          useInferSize: true // String sources need inferSize
         }
       }
     }
 
-    // Case 3: String source - CRITICAL validation
+    // Case 3: String source - Use inferSize for optimization
     if (typeof src === 'string') {
-      const validatedString = validateStringSource(src)
+      const processedSrc = processStringSource(src)
       return {
-        isValid: validatedString.isValid,
-        useAstroImage: false, // CRITICAL: NEVER use Astro Image for ANY string
-        finalSrc: validatedString.processedSrc,
-        reason: validatedString.reason
+        isValid: processedSrc.isValid,
+        finalSrc: processedSrc.finalSrc,
+        reason: processedSrc.reason,
+        useInferSize: true // String sources need inferSize
       }
     }
 
     // Invalid type
     return { 
       isValid: false, 
-      useAstroImage: false, 
       finalSrc: null, 
-      reason: 'unsupported-type' 
+      reason: 'invalid-type',
+      useInferSize: false
     }
 
   } catch (error) {
-    console.error('AccessibleImage: Validation error:', error)
+    console.error('AccessibleImage: Critical validation error:', error)
     return { 
       isValid: false, 
-      useAstroImage: false, 
       finalSrc: null, 
-      reason: 'validation-error' 
+      reason: 'validation-error',
+      useInferSize: false
     }
   }
 }
 
 /**
- * ROBUST: String source validation with comprehensive path handling
- * INCLUDING CRITICAL FIX for 'public/' prefix
+ * COMPREHENSIVE: Alt text generation
  */
-const validateStringSource = (stringSrc: string) => {
-  let trimmed = stringSrc.trim()
-  
-  if (!trimmed || trimmed.length === 0) {
-    return { isValid: false, processedSrc: null, reason: 'empty-string' }
-  }
-
-  try {
-    // CRITICAL FIX: Remove 'public/' prefix if it exists (common mistake)
-    if (trimmed.startsWith('public/')) {
-      trimmed = '/' + trimmed.substring(7) // Remove 'public/' and add leading slash
-      console.warn(`AccessibleImage: Fixed incorrect path - removed 'public/' prefix: "${stringSrc}" -> "${trimmed}"`)
-    }
-
-    // External HTTPS URLs - Safe and valid
-    if (trimmed.startsWith('https://')) {
-      return { 
-        isValid: true, 
-        processedSrc: trimmed, 
-        reason: 'external-https-url' 
-      }
-    }
-    
-    // External HTTP URLs - Valid but warn about security
-    if (trimmed.startsWith('http://')) {
-      console.warn(`AccessibleImage: Insecure HTTP URL: ${trimmed}`)
-      return { 
-        isValid: true, 
-        processedSrc: trimmed, 
-        reason: 'external-http-url' 
-      }
-    }
-    
-    // Public folder absolute paths - Safe and valid
-    if (trimmed.startsWith('/')) {
-      return { 
-        isValid: true, 
-        processedSrc: trimmed, 
-        reason: 'public-absolute-path' 
-      }
-    }
-    
-    // Data URLs - Valid
-    if (trimmed.startsWith('data:image/')) {
-      return { 
-        isValid: true, 
-        processedSrc: trimmed, 
-        reason: 'data-url' 
-      }
-    }
-    
-    // CRITICAL FIX: Handle problematic relative paths
-    if (trimmed.startsWith('./') || trimmed.startsWith('../')) {
-      // Convert relative paths to public/images paths
-      let convertedPath = trimmed.replace(/^\.\.?\//, '')
-      
-      // If it's a common relative path pattern, assume it should go to public/images
-      if (/\.(jpg|jpeg|png|webp|gif|svg|avif)$/i.test(convertedPath)) {
-        convertedPath = `/images/${convertedPath}`
-        console.warn(`AccessibleImage: Converting "${trimmed}" to "${convertedPath}". Consider moving the image to public/images/`)
-        
-        return { 
-          isValid: true, 
-          processedSrc: convertedPath, 
-          reason: 'converted-relative-path' 
-        }
-      }
-    }
-    
-    // Basic filename without path - assume it's in public/images
-    if (trimmed.includes('.') && /\.(jpg|jpeg|png|webp|gif|svg|avif)$/i.test(trimmed) && !trimmed.includes('/')) {
-      const assumedPath = `/images/${trimmed}`
-      console.warn(`AccessibleImage: Assuming "${trimmed}" is located at "${assumedPath}"`)
-      
-      return { 
-        isValid: true, 
-        processedSrc: assumedPath, 
-        reason: 'assumed-public-image' 
-      }
-    }
-    
-    // Reject invalid formats
-    return { 
-      isValid: false, 
-      processedSrc: null, 
-      reason: 'invalid-string-format' 
-    }
-    
-  } catch (error) {
-    console.error('AccessibleImage: String validation error:', error)
-    return { 
-      isValid: false, 
-      processedSrc: null, 
-      reason: 'string-validation-error' 
-    }
-  }
-}
-
-/**
- * PRODUCTION-READY: Alt text generation with multiple fallback strategies
- */
-const generateComprehensiveAltText = (): string => {
-  // Priority 1: Explicit alt prop
+const generateAltText = (): string => {
+  // Priority 1: Explicit alt
   if (alt && typeof alt === 'string' && alt.trim().length > 0) {
     return alt.trim()
   }
   
   // Priority 2: Alt from src object
-  if (typeof src === 'object' && src !== null && 'alt' in src && src.alt && typeof src.alt === 'string' && src.alt.trim().length > 0) {
+  if (typeof src === 'object' && src !== null && 'alt' in src && 
+      src.alt && typeof src.alt === 'string' && src.alt.trim().length > 0) {
     return src.alt.trim()
   }
   
-  // Priority 3: Fallback alt prop
+  // Priority 3: Fallback alt
   if (fallbackAlt && typeof fallbackAlt === 'string' && fallbackAlt.trim().length > 0) {
     return fallbackAlt.trim()
   }
   
-  // Priority 4: Generate from image source
-  const imageValidation = validateAndProcessImageSource()
-  if (imageValidation.isValid && imageValidation.finalSrc) {
-    try {
+  // Priority 4: Generate from filename
+  try {
+    const validation = validateImageSource()
+    if (validation.isValid && validation.finalSrc) {
       let imagePath = ''
       
-      if (typeof imageValidation.finalSrc === 'string') {
-        imagePath = imageValidation.finalSrc
-      } else if (typeof imageValidation.finalSrc === 'object' && 'src' in imageValidation.finalSrc) {
-        imagePath = imageValidation.finalSrc.src
+      if (typeof validation.finalSrc === 'string') {
+        imagePath = validation.finalSrc
+      } else if (typeof validation.finalSrc === 'object' && 'src' in validation.finalSrc) {
+        imagePath = validation.finalSrc.src
       }
       
-      if (imagePath && typeof imagePath === 'string') {
+      if (imagePath) {
         const filename = imagePath.split('/').pop()?.split('?')[0]?.split('.')[0]
-        if (filename && filename.trim().length > 0) {
-          const readableText = filename
+        if (filename && filename.length > 0) {
+          const readable = filename
             .replace(/[-_]/g, ' ')
             .replace(/([A-Z])/g, ' $1')
             .replace(/\s+/g, ' ')
@@ -262,143 +223,108 @@ const generateComprehensiveAltText = (): string => {
             .toLowerCase()
             .replace(/^\w/, c => c.toUpperCase())
           
-          if (readableText && readableText.length > 0) {
-            return `Image: ${readableText}`
+          if (readable.length > 0) {
+            return `Image: ${readable}`
           }
         }
       }
-    } catch (error) {
-      console.warn('AccessibleImage: Error generating alt from source:', error)
     }
+  } catch (error) {
+    console.warn('AccessibleImage: Alt generation error:', error)
   }
   
-  // Final fallback - NEVER return empty string
+  // Final fallback - NEVER empty
   return 'Descriptive image'
 }
 
-// Process the image source
-const imageValidation = validateAndProcessImageSource()
-const generatedAlt = generateComprehensiveAltText()
+// Execute validation and alt text generation
+const validation = validateImageSource()
+const altText = generateAltText()
 
-// Ensure alt text meets requirements and has reasonable length
-const finalAltText = generatedAlt.length > 125 ? 
-  generatedAlt.substring(0, 122) + '...' : 
-  generatedAlt
+// Ensure alt text is never empty and reasonable length
+const finalAlt = altText.length > 125 ? altText.substring(0, 122) + '...' : altText
+const guaranteedAlt = (finalAlt && finalAlt.trim().length > 0) ? finalAlt.trim() : 'Image content'
 
-// GUARANTEE alt text is never empty (prevents ImageMissingAlt error)
-const guaranteedAltText = (finalAltText && finalAltText.trim().length > 0) ? 
-  finalAltText.trim() : 
-  'Image content'
-
-// Performance optimizations
+// Performance settings
 const effectiveLoading = priority ? 'eager' : loading
 const effectiveFetchPriority = priority ? 'high' : fetchpriority
 
-// Security: Sanitize CSS classes
-const sanitizedClassName = className ? 
-  className.replace(/[<>'"]/g, '').trim() : 
-  ''
+// Determine if we should use inferSize
+const shouldInferSize = validation.useInferSize && inferSize
+
+// Security: Sanitize CSS
+const sanitizedClassName = className ? className.replace(/[<>'"]/g, '').trim() : ''
 
 // Development debugging
 if (import.meta.env.DEV) {
-  console.log(`🖼️ AccessibleImage Debug:`)
+  console.log(`🚀 AccessibleImage Optimized Debug:`)
   console.log(`   Original Source:`, src)
-  console.log(`   Validation:`, imageValidation)
-  console.log(`   Final Alt: "${guaranteedAltText}" (${guaranteedAltText.length} chars)`)
-  console.log(`   Rendering Method: ${imageValidation.useAstroImage ? 'Astro Image' : 'Regular img tag'}`)
+  console.log(`   Validation:`, validation)
+  console.log(`   Final Alt: "${guaranteedAlt}" (${guaranteedAlt.length} chars)`)
+  console.log(`   Using inferSize: ${shouldInferSize}`)
+  console.log(`   🎯 USING ASTRO IMAGE COMPONENT FOR OPTIMAL PERFORMANCE`)
   
-  if (!imageValidation.isValid) {
-    console.warn(`⚠️ Invalid image source - Reason: ${imageValidation.reason}`)
-  }
-  
-  if (!alt && !fallbackAlt) {
-    console.warn(`⚠️ No explicit alt text provided. Generated: "${guaranteedAltText}"`)
+  if (!validation.isValid) {
+    console.error(`❌ INVALID IMAGE SOURCE - Reason: ${validation.reason}`)
   }
 }
 ---
 
-<!-- BULLETPROOF: Render based on validation results -->
-{imageValidation.isValid ? (
-  <figure class="accessible-image-container" role="img" aria-label={guaranteedAltText}>
-    {imageValidation.useAstroImage ? (
-      <!-- SAFE: Only for validated ImageMetadata objects -->
-      <Image 
-        src={imageValidation.finalSrc}
-        alt={guaranteedAltText}
-        title={title || guaranteedAltText}
-        class={sanitizedClassName}
-        width={width}
-        height={height}
-        loading={effectiveLoading}
-        decoding={decoding}
-        quality={quality}
-        format={format}
-        fetchpriority={effectiveFetchPriority}
-        {...rest}
-      />
-    ) : (
-      <!-- SAFE: For all validated string sources (URLs, paths, uploads) -->
-      <img 
-        src={imageValidation.finalSrc}
-        alt={guaranteedAltText}
-        title={title || guaranteedAltText}
-        class={sanitizedClassName}
-        width={width}
-        height={height}
-        loading={effectiveLoading}
-        decoding={decoding}
-        fetchpriority={effectiveFetchPriority}
-        onerror="this.style.display='none'; this.nextElementSibling?.classList.remove('hidden'); console.warn('Image failed to load:', this.src)"
-        {...rest}
-      />
-    )}
+<!-- OPTIMAL: Always use Astro Image Component for maximum performance -->
+{validation.isValid ? (
+  <figure class="accessible-image-container" role="img" aria-label={guaranteedAlt}>
+    <Image 
+      src={validation.finalSrc}
+      alt={guaranteedAlt}
+      title={title || guaranteedAlt}
+      class={sanitizedClassName}
+      width={shouldInferSize ? undefined : width}
+      height={shouldInferSize ? undefined : height}
+      inferSize={shouldInferSize}
+      loading={effectiveLoading}
+      decoding={decoding}
+      quality={quality}
+      format={format}
+      fetchpriority={effectiveFetchPriority}
+      {...rest}
+    />
     
-    <!-- Enhanced error fallback with better UX -->
+    <!-- Error fallback -->
     <div class="hidden image-fallback" role="img" aria-label="Image not available">
       <div class="flex items-center justify-center w-full h-32 bg-gray-100 dark:bg-gray-800 rounded border-2 border-dashed border-gray-300 dark:border-gray-600">
         <div class="text-center text-gray-500 dark:text-gray-400">
-          <svg class="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <svg class="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
           </svg>
-          <p class="text-sm font-medium">Image not available</p>
-          <p class="text-xs opacity-75 mt-1">{guaranteedAltText}</p>
+          <p class="text-sm font-medium">Optimized image not available</p>
+          <p class="text-xs opacity-75 mt-1">{guaranteedAlt}</p>
           {import.meta.env.DEV && (
-            <p class="text-xs opacity-50 mt-1 font-mono">
-              Reason: {imageValidation.reason}
-            </p>
+            <p class="text-xs opacity-50 mt-1 font-mono">Reason: {validation.reason}</p>
           )}
         </div>
       </div>
     </div>
   </figure>
 ) : (
-  <!-- Handle completely invalid sources -->
-  <Fragment>
+  <!-- Invalid source handling -->
+  <div class="sr-only" role="img" aria-label={guaranteedAlt}>
     {import.meta.env.DEV ? (
-      <div class="dev-image-error border-2 border-red-300 bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
+      <div class="border-2 border-red-300 bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
         <div class="flex items-center gap-2">
-          <svg class="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-5 h-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z"></path>
           </svg>
           <div>
-            <p class="text-red-700 dark:text-red-300 text-sm font-medium">
-              AccessibleImage: Invalid image source
-            </p>
-            <p class="text-red-600 dark:text-red-400 text-xs mt-1">
-              Reason: {imageValidation.reason}
-            </p>
-            <p class="text-red-600 dark:text-red-400 text-xs font-mono break-all">
-              Source: {JSON.stringify(src)}
-            </p>
+            <p class="text-red-700 text-sm font-semibold">Invalid Image Source</p>
+            <p class="text-red-600 text-xs">Reason: {validation.reason}</p>
+            <p class="text-red-600 text-xs font-mono break-all">Source: {JSON.stringify(src)}</p>
           </div>
         </div>
       </div>
     ) : (
-      <div class="sr-only" role="img" aria-label={guaranteedAltText}>
-        Image source not available: {guaranteedAltText}
-      </div>
+      <span>Image source not available</span>
     )}
-  </Fragment>
+  </div>
 )}
 
 <style>
@@ -435,12 +361,7 @@ if (import.meta.env.DEV) {
     outline-offset: 2px;
     border-radius: 4px;
   }
-
-  .dev-image-error {
-    font-family: 'JetBrains Mono', 'Monaco', 'Consolas', monospace;
-  }
   
-  /* Ensure images are responsive */
   .accessible-image-container img,
   .accessible-image-container Image {
     max-width: 100%;
