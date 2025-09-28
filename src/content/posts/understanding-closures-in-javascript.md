@@ -1,4 +1,5 @@
 ---
+# file: src/content/posts/understanding-closures-in-javascript.md
 title: 'Understanding Closures in JavaScript'
 published: 2025-07-01
 draft: false

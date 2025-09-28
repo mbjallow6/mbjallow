@@ -1,9 +1,10 @@
 ---
 // file: src/components/AccessibleImage.astro
 import { Image } from 'astro:assets'
+import type { ImageMetadata } from 'astro'
 
 interface Props {
-  src: string | ImageMetadata | { src: any; alt?: string }
+  src: string | ImageMetadata | { src: any; alt?: string } | null | undefined
   alt?: string
   title?: string
   class?: string
@@ -36,188 +37,288 @@ const {
 } = Astro.props
 
 /**
- * PRODUCTION-READY: Alt text generation that NEVER returns empty string
+ * BULLETPROOF: Image source validation that NEVER allows problematic paths
+ * to reach Astro Image component
  */
-const generateIntelligentAltText = (): string => {
-  if (alt && alt.trim().length > 0) {
-    return alt.trim()
-  }
-  
-  if (typeof src === 'object' && 'alt' in src && src.alt && src.alt.trim().length > 0) {
-    return src.alt.trim()
-  }
-  
-  if (fallbackAlt && fallbackAlt.trim().length > 0) {
-    return fallbackAlt.trim()
-  }
-  
-  try {
-    let imageSrc: string = ''
-    
-    if (typeof src === 'string') {
-      imageSrc = src
-    } else if (typeof src === 'object' && 'src' in src) {
-      imageSrc = typeof src.src === 'string' ? src.src : ''
+const validateAndProcessImageSource = () => {
+  // Early exit for invalid sources
+  if (!src || src === '' || src === null || src === undefined) {
+    return { 
+      isValid: false, 
+      useAstroImage: false, 
+      finalSrc: null, 
+      reason: 'no-source' 
     }
-    
-    if (imageSrc && imageSrc.trim().length > 0) {
-      const filename = imageSrc.split('/').pop()?.split('?')[0]?.split('.')[0]
-      if (filename && filename.trim().length > 0) {
-        const readableText = filename
-          .replace(/[-_]/g, ' ')
-          .replace(/([A-Z])/g, ' $1')
-          .replace(/\s+/g, ' ')
-          .trim()
-          .toLowerCase()
-          .replace(/^\w/, c => c.toUpperCase())
-        
-        if (readableText && readableText.length > 0) {
-          return `Image: ${readableText}`
+  }
+
+  try {
+    // Case 1: Direct ImageMetadata object (imported images)
+    if (typeof src === 'object' && src !== null && 'src' in src && 'width' in src && 'height' in src) {
+      return {
+        isValid: true,
+        useAstroImage: true,
+        finalSrc: src,
+        reason: 'imported-image-metadata'
+      }
+    }
+
+    // Case 2: Object with src property
+    if (typeof src === 'object' && src !== null && 'src' in src) {
+      const nestedSrc = src.src
+      
+      // Check if nested src is ImageMetadata
+      if (typeof nestedSrc === 'object' && nestedSrc !== null && 'width' in nestedSrc && 'height' in nestedSrc) {
+        return {
+          isValid: true,
+          useAstroImage: true,
+          finalSrc: nestedSrc,
+          reason: 'nested-image-metadata'
+        }
+      }
+      
+      // If nested src is string, validate and use regular img
+      if (typeof nestedSrc === 'string') {
+        const validatedString = validateStringSource(nestedSrc)
+        return {
+          isValid: validatedString.isValid,
+          useAstroImage: false, // NEVER use Astro Image for string sources
+          finalSrc: validatedString.processedSrc,
+          reason: `object-with-${validatedString.reason}`
         }
       }
     }
+
+    // Case 3: String source - CRITICAL validation
+    if (typeof src === 'string') {
+      const validatedString = validateStringSource(src)
+      return {
+        isValid: validatedString.isValid,
+        useAstroImage: false, // CRITICAL: NEVER use Astro Image for ANY string
+        finalSrc: validatedString.processedSrc,
+        reason: validatedString.reason
+      }
+    }
+
+    // Invalid type
+    return { 
+      isValid: false, 
+      useAstroImage: false, 
+      finalSrc: null, 
+      reason: 'unsupported-type' 
+    }
+
   } catch (error) {
-    console.warn('AccessibleImage: Error extracting filename for alt text:', error)
+    console.error('AccessibleImage: Validation error:', error)
+    return { 
+      isValid: false, 
+      useAstroImage: false, 
+      finalSrc: null, 
+      reason: 'validation-error' 
+    }
   }
-  
-  return 'Descriptive image'
 }
 
 /**
- * BULLETPROOF: Image analysis that NEVER lets invalid images reach Astro Image component
+ * ROBUST: String source validation with comprehensive path handling
  */
-const analyzeImageSource = () => {
-  if (!src) {
-    return { type: 'invalid', isValid: false, imageSrc: null, useAstroImage: false }
+const validateStringSource = (stringSrc: string) => {
+  const trimmed = stringSrc.trim()
+  
+  if (!trimmed || trimmed.length === 0) {
+    return { isValid: false, processedSrc: null, reason: 'empty-string' }
   }
 
-  // Case 1: Astro imported image (ImageMetadata) - SAFE for Astro Image
-  if (typeof src === 'object' && 'src' in src && 'width' in src && 'height' in src) {
-    return {
-      type: 'astro-imported',
-      isValid: true,
-      imageSrc: src,
-      useAstroImage: true
+  try {
+    // External HTTPS URLs - Safe and valid
+    if (trimmed.startsWith('https://')) {
+      return { 
+        isValid: true, 
+        processedSrc: trimmed, 
+        reason: 'external-https-url' 
+      }
     }
-  }
-
-  // Case 2: Image object with ImageMetadata src - SAFE for Astro Image
-  if (typeof src === 'object' && 'src' in src && src.src) {
-    // Only use Astro Image if src is ImageMetadata (has width/height properties)
-    const isImageMetadata = typeof src.src === 'object' && 'width' in src.src && 'height' in src.src
     
-    return {
-      type: 'object-with-src',
-      isValid: true,
-      imageSrc: src.src,
-      useAstroImage: isImageMetadata
+    // External HTTP URLs - Valid but warn about security
+    if (trimmed.startsWith('http://')) {
+      console.warn(`AccessibleImage: Insecure HTTP URL: ${trimmed}`)
+      return { 
+        isValid: true, 
+        processedSrc: trimmed, 
+        reason: 'external-http-url' 
+      }
     }
-  }
-
-  // Case 3: String URL/path - NEVER use Astro Image for strings
-  if (typeof src === 'string') {
-    const trimmedSrc = src.trim()
     
-    try {
-      // External HTTPS URLs - Use regular img tag
-      if (trimmedSrc.startsWith('https://')) {
-        return {
-          type: 'external-https',
-          isValid: true,
-          imageSrc: trimmedSrc,
-          useAstroImage: false // NEVER use Astro Image for URL strings
+    // Public folder absolute paths - Safe and valid
+    if (trimmed.startsWith('/')) {
+      return { 
+        isValid: true, 
+        processedSrc: trimmed, 
+        reason: 'public-absolute-path' 
+      }
+    }
+    
+    // Data URLs - Valid
+    if (trimmed.startsWith('data:image/')) {
+      return { 
+        isValid: true, 
+        processedSrc: trimmed, 
+        reason: 'data-url' 
+      }
+    }
+    
+    // CRITICAL FIX: Handle problematic relative paths
+    if (trimmed.startsWith('./') || trimmed.startsWith('../')) {
+      // Convert relative paths to public/images paths
+      let convertedPath = trimmed.replace(/^\.\.?\//, '')
+      
+      // If it's a common relative path pattern, assume it should go to public/images
+      if (/\.(jpg|jpeg|png|webp|gif|svg|avif)$/i.test(convertedPath)) {
+        convertedPath = `/images/${convertedPath}`
+        console.warn(`AccessibleImage: Converting "${trimmed}" to "${convertedPath}". Consider moving the image to public/images/`)
+        
+        return { 
+          isValid: true, 
+          processedSrc: convertedPath, 
+          reason: 'converted-relative-path' 
         }
       }
+    }
+    
+    // Basic filename without path - assume it's in public/images
+    if (trimmed.includes('.') && /\.(jpg|jpeg|png|webp|gif|svg|avif)$/i.test(trimmed) && !trimmed.includes('/')) {
+      const assumedPath = `/images/${trimmed}`
+      console.warn(`AccessibleImage: Assuming "${trimmed}" is located at "${assumedPath}"`)
       
-      // External HTTP URLs - Use regular img tag
-      if (trimmedSrc.startsWith('http://')) {
-        console.warn(`AccessibleImage: Using insecure HTTP image: ${trimmedSrc}`)
-        return {
-          type: 'external-http',
-          isValid: true,
-          imageSrc: trimmedSrc,
-          useAstroImage: false // NEVER use Astro Image for URL strings
-        }
+      return { 
+        isValid: true, 
+        processedSrc: assumedPath, 
+        reason: 'assumed-public-image' 
       }
-      
-      // Absolute paths (public folder) - Use regular img tag
-      if (trimmedSrc.startsWith('/')) {
-        return {
-          type: 'absolute-path',
-          isValid: true,
-          imageSrc: trimmedSrc,
-          useAstroImage: false // NEVER use Astro Image for path strings
-        }
-      }
-      
-      // Data URLs - Use regular img tag
-      if (trimmedSrc.startsWith('data:image/')) {
-        return {
-          type: 'data-url',
-          isValid: true,
-          imageSrc: trimmedSrc,
-          useAstroImage: false // NEVER use Astro Image for data URLs
-        }
-      }
-      
-      // CRITICAL: Handle relative paths - Convert them but DON'T use Astro Image
-      if (trimmedSrc.includes('.') && /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(trimmedSrc)) {
-        const convertedPath = `/images/posts/${trimmedSrc.replace(/^\.\//, '')}`
-        console.warn(`AccessibleImage: Converting relative path "${trimmedSrc}" to "${convertedPath}"`)
-        return {
-          type: 'relative-converted',
-          isValid: true,
-          imageSrc: convertedPath,
-          useAstroImage: false // CRITICAL: NEVER use Astro Image for converted paths
-        }
-      }
-      
-    } catch (error) {
-      console.error('AccessibleImage: Error validating image source:', error)
+    }
+    
+    // Reject invalid formats
+    return { 
+      isValid: false, 
+      processedSrc: null, 
+      reason: 'invalid-string-format' 
+    }
+    
+  } catch (error) {
+    console.error('AccessibleImage: String validation error:', error)
+    return { 
+      isValid: false, 
+      processedSrc: null, 
+      reason: 'string-validation-error' 
     }
   }
-
-  return { type: 'invalid', isValid: false, imageSrc: null, useAstroImage: false }
 }
 
-const imageAnalysis = analyzeImageSource()
-const altText = generateIntelligentAltText()
+/**
+ * PRODUCTION-READY: Alt text generation with multiple fallback strategies
+ */
+const generateComprehensiveAltText = (): string => {
+  // Priority 1: Explicit alt prop
+  if (alt && typeof alt === 'string' && alt.trim().length > 0) {
+    return alt.trim()
+  }
+  
+  // Priority 2: Alt from src object
+  if (typeof src === 'object' && src !== null && 'alt' in src && src.alt && typeof src.alt === 'string' && src.alt.trim().length > 0) {
+    return src.alt.trim()
+  }
+  
+  // Priority 3: Fallback alt prop
+  if (fallbackAlt && typeof fallbackAlt === 'string' && fallbackAlt.trim().length > 0) {
+    return fallbackAlt.trim()
+  }
+  
+  // Priority 4: Generate from image source
+  const imageValidation = validateAndProcessImageSource()
+  if (imageValidation.isValid && imageValidation.finalSrc) {
+    try {
+      let imagePath = ''
+      
+      if (typeof imageValidation.finalSrc === 'string') {
+        imagePath = imageValidation.finalSrc
+      } else if (typeof imageValidation.finalSrc === 'object' && 'src' in imageValidation.finalSrc) {
+        imagePath = imageValidation.finalSrc.src
+      }
+      
+      if (imagePath && typeof imagePath === 'string') {
+        const filename = imagePath.split('/').pop()?.split('?')[0]?.split('.')[0]
+        if (filename && filename.trim().length > 0) {
+          const readableText = filename
+            .replace(/[-_]/g, ' ')
+            .replace(/([A-Z])/g, ' $1')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .toLowerCase()
+            .replace(/^\w/, c => c.toUpperCase())
+          
+          if (readableText && readableText.length > 0) {
+            return `Image: ${readableText}`
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('AccessibleImage: Error generating alt from source:', error)
+    }
+  }
+  
+  // Final fallback - NEVER return empty string
+  return 'Descriptive image'
+}
 
-// Triple-check alt text is never empty
-const guaranteedAltText = (altText && altText.trim().length > 0) ? altText.trim() : 'Descriptive image'
-const optimizedAlt = guaranteedAltText.length > 125 ? guaranteedAltText.substring(0, 122) + '...' : guaranteedAltText
-const finalAltText = (optimizedAlt && optimizedAlt.trim().length > 0) ? optimizedAlt : 'Image content'
+// Process the image source
+const imageValidation = validateAndProcessImageSource()
+const generatedAlt = generateComprehensiveAltText()
 
-// Loading strategy
+// Ensure alt text meets requirements and has reasonable length
+const finalAltText = generatedAlt.length > 125 ? 
+  generatedAlt.substring(0, 122) + '...' : 
+  generatedAlt
+
+// GUARANTEE alt text is never empty (prevents ImageMissingAlt error)
+const guaranteedAltText = (finalAltText && finalAltText.trim().length > 0) ? 
+  finalAltText.trim() : 
+  'Image content'
+
+// Performance optimizations
 const effectiveLoading = priority ? 'eager' : loading
 const effectiveFetchPriority = priority ? 'high' : fetchpriority
 
-// Sanitize CSS
-const sanitizedClassName = className?.replace(/[<>'"]/g, '') || ''
+// Security: Sanitize CSS classes
+const sanitizedClassName = className ? 
+  className.replace(/[<>'"]/g, '').trim() : 
+  ''
 
-// Development logging
-if (import.meta.env.DEV && imageAnalysis.isValid) {
-  console.log(`🖼️  AccessibleImage Analysis:`)
-  console.log(`   Type: ${imageAnalysis.type}`)
-  console.log(`   Use Astro Image: ${imageAnalysis.useAstroImage}`)
-  console.log(`   Final Alt text: "${finalAltText}" (${finalAltText.length} chars)`)
-  console.log(`   Loading: ${effectiveLoading} | Priority: ${priority}`)
+// Development debugging
+if (import.meta.env.DEV) {
+  console.log(`🖼️ AccessibleImage Debug:`)
+  console.log(`   Source:`, src)
+  console.log(`   Validation:`, imageValidation)
+  console.log(`   Final Alt: "${guaranteedAltText}" (${guaranteedAltText.length} chars)`)
+  console.log(`   Rendering Method: ${imageValidation.useAstroImage ? 'Astro Image' : 'Regular img tag'}`)
+  
+  if (!imageValidation.isValid) {
+    console.warn(`⚠️ Invalid image source - Reason: ${imageValidation.reason}`)
+  }
   
   if (!alt && !fallbackAlt) {
-    console.warn(`⚠️  No explicit alt text provided. Generated: "${finalAltText}"`)
+    console.warn(`⚠️ No explicit alt text provided. Generated: "${guaranteedAltText}"`)
   }
 }
 ---
 
-<!-- BULLETPROOF rendering: Never pass strings to Astro Image -->
-{imageAnalysis.isValid ? (
-  <figure class="accessible-image-container" role="img">
-    {imageAnalysis.useAstroImage ? (
-      <!-- ONLY for proper ImageMetadata objects -->
+<!-- BULLETPROOF: Render based on validation results -->
+{imageValidation.isValid ? (
+  <figure class="accessible-image-container" role="img" aria-label={guaranteedAltText}>
+    {imageValidation.useAstroImage ? (
+      <!-- SAFE: Only for validated ImageMetadata objects -->
       <Image 
-        src={imageAnalysis.imageSrc}
-        alt={finalAltText}
-        title={title}
+        src={imageValidation.finalSrc}
+        alt={guaranteedAltText}
+        title={title || guaranteedAltText}
         class={sanitizedClassName}
         width={width}
         height={height}
@@ -229,45 +330,73 @@ if (import.meta.env.DEV && imageAnalysis.isValid) {
         {...rest}
       />
     ) : (
-      <!-- For ALL strings, URLs, and converted paths -->
+      <!-- SAFE: For all validated string sources (URLs, paths, uploads) -->
       <img 
-        src={imageAnalysis.imageSrc}
-        alt={finalAltText}
-        title={title}
+        src={imageValidation.finalSrc}
+        alt={guaranteedAltText}
+        title={title || guaranteedAltText}
         class={sanitizedClassName}
         width={width}
         height={height}
         loading={effectiveLoading}
         decoding={decoding}
         fetchpriority={effectiveFetchPriority}
-        onerror="this.style.display='none'; this.nextElementSibling?.classList.remove('hidden')"
+        onerror="this.style.display='none'; this.nextElementSibling?.classList.remove('hidden'); console.warn('Image failed to load:', this.src)"
         {...rest}
       />
     )}
     
-    <!-- Graceful fallback -->
-    <div class="hidden image-fallback" aria-label="Image not available">
+    <!-- Enhanced error fallback with better UX -->
+    <div class="hidden image-fallback" role="img" aria-label="Image not available">
       <div class="flex items-center justify-center w-full h-32 bg-gray-100 dark:bg-gray-800 rounded border-2 border-dashed border-gray-300 dark:border-gray-600">
         <div class="text-center text-gray-500 dark:text-gray-400">
-          <svg class="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
           </svg>
-          <p class="text-sm">Image not available</p>
-          <p class="text-xs opacity-75">{finalAltText}</p>
+          <p class="text-sm font-medium">Image not available</p>
+          <p class="text-xs opacity-75 mt-1">{guaranteedAltText}</p>
+          {import.meta.env.DEV && (
+            <p class="text-xs opacity-50 mt-1 font-mono">
+              Reason: {imageValidation.reason}
+            </p>
+          )}
         </div>
       </div>
     </div>
   </figure>
 ) : (
-  <div class="sr-only" role="img" aria-label="Invalid image source">
-    Image source not provided or invalid
-  </div>
+  <!-- Handle completely invalid sources -->
+  {import.meta.env.DEV ? (
+    <div class="dev-image-error border-2 border-red-300 bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
+      <div class="flex items-center gap-2">
+        <svg class="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z"></path>
+        </svg>
+        <div>
+          <p class="text-red-700 dark:text-red-300 text-sm font-medium">
+            AccessibleImage: Invalid image source
+          </p>
+          <p class="text-red-600 dark:text-red-400 text-xs mt-1">
+            Reason: {imageValidation.reason}
+          </p>
+          <p class="text-red-600 dark:text-red-400 text-xs font-mono break-all">
+            Source: {JSON.stringify(src)}
+          </p>
+        </div>
+      </div>
+    </div>
+  ) : (
+    <div class="sr-only" role="img" aria-label={guaranteedAltText}>
+      Image source not available: {guaranteedAltText}
+    </div>
+  )}
 )}
 
 <style>
   .accessible-image-container {
     position: relative;
     margin: 0;
+    display: block;
   }
   
   .image-fallback {
@@ -291,8 +420,21 @@ if (import.meta.env.DEV && imageAnalysis.isValid) {
     border: 0;
   }
   
-  .accessible-image-container img:focus {
+  .accessible-image-container img:focus,
+  .accessible-image-container Image:focus {
     outline: 2px solid var(--theme-accent, #3b82f6);
     outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  .dev-image-error {
+    font-family: 'JetBrains Mono', 'Monaco', 'Consolas', monospace;
+  }
+  
+  /* Ensure images are responsive */
+  .accessible-image-container img,
+  .accessible-image-container Image {
+    max-width: 100%;
+    height: auto;
   }
 </style>

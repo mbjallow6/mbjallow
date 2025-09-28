@@ -1,15 +1,26 @@
-// file: src/content.config.ts
+// file: src/content/config.ts
 import { defineCollection, z } from 'astro:content'
 import { glob } from 'astro/loaders'
 
 /**
- * PRODUCTION-READY: Ultra-permissive image schema that NEVER rejects content
- * Let our AccessibleImage component handle all validation instead
+ * PRODUCTION-READY: Flexible image schema that supports all image sources
+ * while preventing problematic data from reaching Astro Image component
  */
-const UltraPermissiveImageSchema = z.union([
-  z.string().optional(), // Accept ANY string or undefined
+const FlexibleImageSchema = z.union([
+  z.string().url().optional(), // External URLs (https://, http://)
+  z.string().startsWith('/').optional(), // Public folder paths (/images/...)
+  z.string().refine(
+    (val) => val === '' || !val.startsWith('./'), 
+    { message: "Relative paths like './image.jpg' should be moved to public/images/" }
+  ).optional(), // Block relative paths that cause issues
+  z.null().optional(), // Explicitly allow null
+  z.undefined().optional(), // Explicitly allow undefined
   z.object({
-    src: z.any(), // Accept ANY source type
+    src: z.union([
+      z.string().url(), // External URLs in objects
+      z.string().startsWith('/'), // Public paths in objects
+      z.any() // Allow ImageMetadata objects
+    ]).optional(),
     alt: z.string().optional()
   }).optional()
 ]).optional()
@@ -26,8 +37,8 @@ export const postsCollection = defineCollection({
       series: z.string().optional(),
       tags: z.array(z.string()).optional().default([]),
       
-      // ULTRA-PERMISSIVE: Accept literally anything for coverImage
-      coverImage: UltraPermissiveImageSchema,
+      // FLEXIBLE: Support URLs, public paths, uploads, but block problematic relative paths
+      coverImage: FlexibleImageSchema,
       coverImageAlt: z.string().optional(),
       
       toc: z.boolean().optional().default(true),
@@ -39,7 +50,7 @@ export const homeCollection = defineCollection({
   schema: () =>
     z.object({
       title: z.string().optional(),
-      avatarImage: UltraPermissiveImageSchema,
+      avatarImage: FlexibleImageSchema,
       avatarImageAlt: z.string().optional(),
       githubCalendar: z.string().optional(),
     }),
@@ -50,7 +61,7 @@ export const addendumCollection = defineCollection({
   schema: () =>
     z.object({
       title: z.string().optional(),
-      avatarImage: UltraPermissiveImageSchema,
+      avatarImage: FlexibleImageSchema,
       avatarImageAlt: z.string().optional(),
     }),
 })

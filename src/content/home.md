@@ -1,7 +1,7 @@
 ---
 title: Welcome to My Blog
 avatarImage: 
-  src: './avatar.jpeg'
+  src: '/images/avatar.jpeg'
   alt: 'Profile photo'
 avatarImageAlt: MBJallow profile photo
 githubCalendar: mbjallow6
