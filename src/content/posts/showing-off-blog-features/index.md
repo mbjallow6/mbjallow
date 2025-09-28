@@ -8,6 +8,9 @@ toc: true
 coverImage:
   src: '/images/posts/cover.jpg'
   alt: 'A person with short, thick hair and prescription glasses sits at an organized workstation, using a magnification app to navigate a webpage. Their posture is proper and relaxed. On the desk: a computer, a mouse, a large desk lamp and a small notebook.'
+#   add dimensions to avoid CLS (optional)
+  width: 1200
+  height: 800
 ---
 
 Since the post does not have a description in the frontmatter, the first paragraph is used.
