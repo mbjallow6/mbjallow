@@ -1,5 +1,5 @@
 ---
-// file: src/components/CoverImage.astro  
+// src/components/CoverImage.astro
 import { Image } from 'astro:assets'
 
 interface Props {
@@ -11,40 +11,51 @@ interface Props {
 
 const { coverImage, coverImageAlt, class: className = "", priority = false } = Astro.props
 
-// Determine rendering strategy
+// Image processing logic
 let shouldRender = false
 let imageSrc: any = null
 let imageAlt = ""
-let useAstroImage = false
+let imageWidth: number | undefined = undefined
+let imageHeight: number | undefined = undefined
+let useInferSize = false
 
 if (coverImage) {
   shouldRender = true
   
   if (typeof coverImage === 'string') {
-    // Handle Decap CMS string paths: "/images/posts/cover.jpg"
     imageSrc = coverImage
     imageAlt = coverImageAlt || 'Cover image'
-    useAstroImage = true // Use Astro Image with inferSize for optimization
+    
+    // Handle different string formats
+    if (coverImage.startsWith('http://') || coverImage.startsWith('https://')) {
+      // External URLs - use inferSize to get dimensions automatically
+      useInferSize = true
+    } else if (coverImage.startsWith('/images/') || coverImage.startsWith('/')) {
+      // Public folder paths - these are already optimized by build process
+      useInferSize = true
+    } else if (coverImage.startsWith('./')) {
+      // Relative paths - should be resolved during build
+      useInferSize = false
+    }
   } else if (coverImage && typeof coverImage === 'object' && coverImage.src) {
-    // Handle manual object: { src: ImageMetadata, alt: "..." }
-    imageSrc = coverImage.src  
+    // Manual object with Astro optimized image
+    imageSrc = coverImage.src
     imageAlt = coverImage.alt || coverImageAlt || 'Cover image'
-    useAstroImage = true // Use Astro Image normally
+    useInferSize = false
   }
 }
-
-// Determine if we need inferSize (for string sources)
-const needsInferSize = typeof coverImage === 'string'
 ---
 
 {shouldRender && imageSrc && (
   <Image
-    priority={priority}
     src={imageSrc}
     alt={imageAlt}
     class={className}
-    inferSize={needsInferSize}
+    priority={priority}
+    inferSize={useInferSize}
     quality={85}
     format="webp"
+    loading={priority ? 'eager' : 'lazy'}
+    decoding={priority ? 'sync' : 'async'}
   />
 )}

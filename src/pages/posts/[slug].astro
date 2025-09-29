@@ -1,4 +1,5 @@
 ---
+// file: src/pages/posts/[slug].astro
 import type { GetStaticPaths } from 'astro'
 import Layout from '~/layouts/Layout.astro'
 import { SeriesGroup, TagsGroup, getSortedPosts } from '~/utils'
@@ -16,6 +17,8 @@ import ScrollUpButton from '~/components/ScrollUpButton.astro'
 import type { Collation } from '~/types'
 import ChevronsRight from '~/icons/chevrons-right.svg'
 import { getPostSequenceContext } from '~/utils'
+import CoverImage from '~/components/CoverImage.astro'
+
 
 export const getStaticPaths = (async () => {
   const posts = await getSortedPosts()
@@ -75,12 +78,11 @@ if (postData.tags && postData.tags.length > 0) {
   <article class="max-w-full py-7.5" data-pagefind-body>
     {
       postData.coverImage && (
-        <Image
-          priority
-          layout="constrained"
-          src={postData.coverImage.src}
-          alt={postData.coverImage.alt}
+        <CoverImage
+          coverImage={postData.coverImage}
+          coverImageAlt={postData.coverImageAlt}
           class="w-full rounded-xl mb-5"
+          priority={true}
         />
       )
     }

@@ -1,4 +1,4 @@
-// file: src/content/config.ts
+// src/content/config.ts
 import { defineCollection, z } from 'astro:content'
 import { glob } from 'astro/loaders'
 
@@ -14,18 +14,19 @@ const postsCollection = defineCollection({
       series: z.string().optional(),
       tags: z.array(z.string()).optional().default([]),
       
-      // ✅ HYBRID: Supports both CMS strings AND manual objects
+      // ✅ FLEXIBLE: Accepts string paths, objects, or external URLs
       coverImage: z.union([
-        z.string(), // For Decap CMS: "/images/posts/cover.jpg"
+        z.string().url(), // External URLs: "https://..."
+        z.string().startsWith('/'), // Public paths: "/images/posts/..."
+        z.string().startsWith('./'), // Relative paths: "./cover.jpg"
         z.strictObject({
-          src: image(), // For manual posts: { src: "./image.jpg", alt: "..." }
+          src: image(), // Astro optimized images
           alt: z.string(),
         })
       ]).optional(),
       
-      // ✅ Separate alt for CMS-generated images
+      // Alternative text for CMS-generated images
       coverImageAlt: z.string().optional(),
-      
       toc: z.boolean().optional().default(true),
     }),
 })
@@ -34,16 +35,15 @@ const homeCollection = defineCollection({
   loader: glob({ pattern: ['home.md', 'home.mdx'], base: './src/content' }),
   schema: ({ image }) =>
     z.object({
-      // ✅ Hybrid avatar image support  
       avatarImage: z.union([
-        z.string(), // For CMS: "/images/avatar.jpg" or string paths
+        z.string().url(),
+        z.string().startsWith('/'),
+        z.string().startsWith('./'),
         z.object({
           src: image(),
           alt: z.string().optional().default('My avatar'),
         })
       ]).optional(),
-      
-      // For CMS compatibility
       avatarImageAlt: z.string().optional(),
       githubCalendar: z.string().optional(),
     }),
@@ -54,7 +54,9 @@ const addendumCollection = defineCollection({
   schema: ({ image }) =>
     z.object({
       avatarImage: z.union([
-        z.string(), // For CMS string paths  
+        z.string().url(),
+        z.string().startsWith('/'),
+        z.string().startsWith('./'),
         z.object({
           src: image(),
           alt: z.string().optional().default('My avatar'),

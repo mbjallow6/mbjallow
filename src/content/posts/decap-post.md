@@ -1,4 +1,5 @@
 ---
+# file: src/content/posts/decap-post.md
 title: Decap Post
 description: Decap Post
 published: 2025-09-28T23:20:00.000+02:00

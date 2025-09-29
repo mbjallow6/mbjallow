@@ -1,6 +1,7 @@
 <!-- file: src/components/PostPreview.astro -->
 ---
 import IconChevronsRight from '~/icons/chevrons-right.svg'
+import CoverImage from './CoverImage.astro'
 import type { CollectionEntry } from 'astro:content'
 import { render } from 'astro:content'
 import Tags from '~/components/Tags.astro'
@@ -26,6 +27,15 @@ const articleLink = samePage ? `#${post.id}` : `/posts/${post.id}`
 ---
 
 <article class="w-full py-5 my-1 md:my-4 border-accent/10">
+  {
+    post.data.coverImage && (
+      <CoverImage
+        coverImage={post.data.coverImage}
+        coverImageAlt={post.data.coverImageAlt}
+        class="w-full rounded-lg mb-3 max-h-48 object-cover"
+      />
+    )
+  }
   <h1 class="mb-3 text-2xl text-heading1 font-semibold">
     <a href={articleLink}># {post.data.title}</a>
   </h1>
