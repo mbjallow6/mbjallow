@@ -1,0 +1,50 @@
+---
+// file: src/components/CoverImage.astro  
+import { Image } from 'astro:assets'
+
+interface Props {
+  coverImage: string | { src: any; alt: string } | undefined
+  coverImageAlt?: string
+  class?: string
+  priority?: boolean
+}
+
+const { coverImage, coverImageAlt, class: className = "", priority = false } = Astro.props
+
+// Determine rendering strategy
+let shouldRender = false
+let imageSrc: any = null
+let imageAlt = ""
+let useAstroImage = false
+
+if (coverImage) {
+  shouldRender = true
+  
+  if (typeof coverImage === 'string') {
+    // Handle Decap CMS string paths: "/images/posts/cover.jpg"
+    imageSrc = coverImage
+    imageAlt = coverImageAlt || 'Cover image'
+    useAstroImage = true // Use Astro Image with inferSize for optimization
+  } else if (coverImage && typeof coverImage === 'object' && coverImage.src) {
+    // Handle manual object: { src: ImageMetadata, alt: "..." }
+    imageSrc = coverImage.src  
+    imageAlt = coverImage.alt || coverImageAlt || 'Cover image'
+    useAstroImage = true // Use Astro Image normally
+  }
+}
+
+// Determine if we need inferSize (for string sources)
+const needsInferSize = typeof coverImage === 'string'
+---
+
+{shouldRender && imageSrc && (
+  <Image
+    priority={priority}
+    src={imageSrc}
+    alt={imageAlt}
+    class={className}
+    inferSize={needsInferSize}
+    quality={85}
+    format="webp"
+  />
+)}
