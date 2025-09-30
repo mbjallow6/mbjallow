@@ -39,4 +39,8 @@ Currently serving as **Research Associate** at Dortmund University of Applied Sc
 ---
 
 ## Research & Technical Expertise
-MB's research portfolio demonstrates sophisticated understanding of healthcare technology applications. His current Master's thesis, "**Implementation of a Web-based Application for HNR Coronary Artery Calcification Progression Prediction and Integrated Cardiovascular Risk Assessment**" (November 2024), addresses critical gaps in clinical decision support systems. The project integrates HNR, MESA-ASCVD, and Framingham risk models into a unified, privacy-preserving platform.
+MB's research portfolio demonstrates sophisticated understanding of healthcare technology applications. His current Master's thesis, "**Predictive and Causal Machine Learning for Cardiovascular Risk Stratification in the Heinz Nixdorf Recall Study**" and research porject "**Implementation of a Web-based Application for HNR Coronary Artery Calcification Progression Prediction and Integrated Cardiovascular Risk Assessment**", addresses critical gaps in clinical decision support systems. The project integrates HNR, MESA-ASCVD, and Framingham risk models into a unified, privacy-preserving platform.
+
+Previously, his Bachelor's thesis on "**Optimized Genetic Algorithm for Influence Maximization in Social Networks using Random Reverse Reachable Sampling**" (2021) demonstrated his ability to tackle complex algorithmic challenges with practical applications in social network analysis.
+
+His publication record includes peer-reviewed papers such as "**Examining the Impact of Team Dynamics in Agile Project Management Success in Software Development: A Systematic Literature Review**" (IEEE International Conference, 2023) and "**Blockchain for Healthcare: A Patient-Centric Data Management Framework for Smart City Ecosystems**" (IEEE European Technology and Engineering Management Summit, 2025).
