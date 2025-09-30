@@ -8,7 +8,7 @@ const config: SiteConfig = {
   title: 'MB Jallow',
   // The description of your site, used for SEO and RSS feed.
   description:
-    'A coder-ready Astro blog theme with 59 of your favorite color schemes to choose from',
+    'MB Jallow, a healthcare AI researcher and digital innovation leader creating transformative solutions with AI, ML, and IoT.',
   // The author of the site, used in the footer, SEO, and RSS feed.
   author: 'MB Jallow',
   // Keywords for SEO, used in the meta tags.
