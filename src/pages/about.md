@@ -36,6 +36,7 @@ His expertise in machine learning emerged during his role as a **Machine Learnin
 The entrepreneurial phase of his career began with product management roles at Marshub and SeedStudio in Shenzhen, China. As **Product Manager** and later **Product Marketing Manager** (March 2021 - October 2022), he led multinational development teams, develop products, and oversaw full-stack IoT product development. His ability to bridge technical complexity with market needs earned him recognition as Outstanding Employee of the Year in 2022.
 
 Currently serving as **Research Associate** at Dortmund University of Applied Sciences and Arts (April 2024 - December 2024), MB leads development of barrier-free web platforms and conducts advanced research in cardiovascular risk prediction. Additionally, he works part-time as a **Corporate Trainer** with The Knowledge Academy, delivering specialized training in content marketing, SEO, project management, and data analysis.
+
 ---
 
 ## Research & Technical Expertise
