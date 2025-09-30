@@ -7,5 +7,4 @@ avatarImage:
 avatarImageAlt: MBJallow profile photo
 githubCalendar: mbjallow6
 ---
-
-Hi there! I'm a passionate developer sharing insights, tutorials, and thoughts about modern web development. **Technical Tutorials**: Step-by-step guides on web development. **Project Insights**: Behind-the-scenes looks at my projects. **Industry Thoughts**: My take on the latest in tech. Feel free to explore my posts and connect with me through the social links below!
+My work sits at the intersection of **Healthcare** and **Technology**. I began my career in **Public Health** and transitioned to **Technology** with a simple mission: to build the tools I wish we'd had in the field. Today, I use machine learning and data science to create practical solutions for complex healthcare challenges, such as predicting cardiovascular risk, developing blockchain systems for healthcare data privacy and security. My focus is on building technology with a tangible human impact.
