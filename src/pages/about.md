@@ -8,16 +8,16 @@ MB Jallow is an expereince Data Sceince and Machine learning engineer with a uni
 ---
 ## Skills & Technologies
 
-- **Frontend:** React, Vue, Astro, Angular, HTML, CSS, Tailwind, Bootstrap
-- **Backend:** Node.js, Python, Flask, FastAPI, Django, Express
-- **Machine Learning:** Scikit-learn, TensorFlow, PyTorch, OpenCV,
-- **Data Analysis:** Pandas, NumPy, Matplotlib, Seaborn, Plotly
-- **Cloud:** AWS, Azure, Google Cloud, Cloudflare, Vercel, Grafana
-- **Databases:** PostgreSQL, MongoDB, MySQL, SQLite, Redis
-- **Mobile:** React Native, Flutter
-- **Blockchain:** Ethereum, Solidity, Web3.js, Hardhat
-- **IoT & Embedded Systems:** Arduino, Raspberry Pi, ESP32, Expressive
-- **Dev Tools:** Git,Github Actions, Docker, Kubernetes, CI/CD, Jenkins
+- Frontend: React, Vue, Astro, Angular, HTML, CSS, Tailwind, Bootstrap
+- Backend: Node.js, Python, Flask, FastAPI, Django, Express
+- Machine Learning: Scikit-learn, TensorFlow, PyTorch, OpenCV,
+- Data Analysis: Pandas, NumPy, Matplotlib, Seaborn, Plotly
+- Cloud: AWS, Azure, Google Cloud, Cloudflare, Vercel, Grafana
+- Databases: PostgreSQL, MongoDB, MySQL, SQLite, Redis
+- Mobile: React Native, Flutter
+- Blockchain: Ethereum, Solidity, Web3.js, Hardhat
+- IoT & Embedded Systems: Arduino, Raspberry Pi, ESP32, Expressive
+- Dev Tools: Git,Github Actions, Docker, Kubernetes, CI/CD, Jenkins
 
 ## My Journey
 
