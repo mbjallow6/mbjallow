@@ -39,6 +39,7 @@ Currently serving as **Research Associate** at Dortmund University of Applied Sc
 ---
 
 ## Research & Technical Expertise
+
 MB's research portfolio demonstrates sophisticated understanding of healthcare technology applications. His current Master's thesis, "**Predictive and Causal Machine Learning for Cardiovascular Risk Stratification in the Heinz Nixdorf Recall Study**" and research porject "**Implementation of a Web-based Application for HNR Coronary Artery Calcification Progression Prediction and Integrated Cardiovascular Risk Assessment**", addresses critical gaps in clinical decision support systems. The project integrates HNR, MESA-ASCVD, and Framingham risk models into a unified, privacy-preserving platform.
 
 Previously, his Bachelor's thesis on "**Optimized Genetic Algorithm for Influence Maximization in Social Networks using Random Reverse Reachable Sampling**" (2021) demonstrated his ability to tackle complex algorithmic challenges with practical applications in social network analysis.
