@@ -5,7 +5,7 @@ author: MB Jallow
 draft: false
 description: 'Modern healthcare uses quality analytics to reduce harm, prevent adverse events, and meet CMS and Joint Commission requirements with real‑time insights and ROI'
 tags: ['clinical quality analytics','AHRQ quality indicators','CMS quality measures','medical errors','patient safety','EHR integration','predictive analytics',]
-series: ['Healthcare IT','Data Governance & Strategy','Clinical Quality & Safety','Predictive Analytics']
+series: 'Healthcare IT','Data Governance & Strategy','Clinical Quality & Safety','Predictive Analytics'
 toc: true
 ---
 
