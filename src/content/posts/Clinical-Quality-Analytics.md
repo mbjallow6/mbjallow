@@ -72,4 +72,6 @@ Predictive analytics represents one of the most transformative applications of c
  
  uses advanced analytics to identify patients at elevated risk for healthcare-associated infections such as central line-associated bloodstream infections, catheter-associated urinary tract infections, and surgical site infections. Predictive models can guide infection prevention protocols and resource allocation to high-risk patients.
 
+ ### Readmission Risk Assessment 
  
+ employs sophisticated algorithms to predict which patients are most likely to return to the hospital within 30 days of discharge. These models consider clinical factors, social determinants of health, medication adherence patterns, and care coordination elements to identify high-risk patients who may benefit from enhanced discharge planning and post-acute care support.
