@@ -96,4 +96,5 @@ Successful clinical quality analytics implementation requires seamless integrati
 Clinical quality analytics platforms provide significant advantages for meeting regulatory requirements and demonstrating compliance with healthcare quality standards.
 
 - ***CMS Quality Payment Program (QPP) Reporting*** is streamlined through automated data collection and calculation systems. The Merit-based Incentive Payment System (MIPS) requires healthcare providers to report on quality measures, improvement activities, and cost metrics. Analytics platforms can automatically calculate required measures and generate compliance reports, reducing administrative burden while ensuring accuracy.
-- 
+- ***Joint Commission Accreditation Support*** is enhanced through continuous monitoring of core measures and patient safety indicators. Analytics systems can track performance against Joint Commission standards in real-time, alerting organizations to potential compliance issues before they impact accreditation status.
+- ***AHRQ Quality Indicator Reporting*** becomes automated and standardized through analytics platforms that calculate prevention quality indicators, patient safety indicators, and inpatient quality indicators according to AHRQ specifications. This automation reduces the manual effort required for quality reporting while improving data accuracy and consistency.
